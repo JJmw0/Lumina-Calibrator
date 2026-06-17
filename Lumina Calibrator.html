@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lumina Calibrator</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; overflow: hidden; background-color: #000000; font-family: -apple-system, sans-serif; user-select: none; }
+        
+        #canvas-container {
+            width: 100vw;
+            height: 100vh;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        #ui-container {
+            position: absolute; top: 20px; left: 20px; background: rgba(10, 16, 26, 0.88);
+            color: #e0f7fa; padding: 24px; border-radius: 12px; border: 1px solid #005f73;
+            box-shadow: 0 8px 32px rgba(0, 229, 255, 0.15); backdrop-filter: blur(8px); z-index: 100; width: 320px;
+            max-height: 90vh; overflow-y: auto;
+        }
+        #ui-container::-webkit-scrollbar { width: 6px; }
+        #ui-container::-webkit-scrollbar-track { background: transparent; }
+        #ui-container::-webkit-scrollbar-thumb { background: rgba(0, 229, 255, 0.3); border-radius: 3px; }
+        h3 { margin: 0 0 4px 0; color: #00e5ff; font-size: 16px; font-weight: 600; }
+        .sub-title { font-size: 11px; color: #64dfdf; margin-bottom: 20px; opacity: 0.8; }
+        
+        .file-upload-wrapper { margin-bottom: 12px; }
+        .file-upload-wrapper label { font-size: 12px; color: #90e0ef; display: block; margin-bottom: 4px; }
+        input[type="file"] { width: 100%; color: #8093a6; font-size: 11px; background: rgba(0, 0, 0, 0.3); padding: 8px; border-radius: 6px; border: 1px dashed #0077b6; cursor: pointer; }
+        input[type="file"]::-webkit-file-upload-button { background: #0077b6; border: none; color: white; padding: 4px 8px; border-radius: 4px; cursor: pointer; margin-right: 8px; font-size: 11px; }
+        
+        .control-group { margin-top: 16px; font-size: 12px; display: flex; flex-direction: column; gap: 6px; }
+        .control-label { display: flex; justify-content: space-between; align-items: center; color: #90e0ef; }
+        .value-display { color: #00e5ff; font-weight: bold; font-family: monospace; }
+        input[type="range"] { width: 100%; height: 4px; background: #14213d; border-radius: 2px; outline: none; accent-color: #00e5ff; cursor: pointer; }
+        .divider { border-top: 1px solid rgba(0, 119, 182, 0.3); margin: 18px 0; }
+        .status-box { font-size: 11px; color: #52b788; margin-top: 15px; background: rgba(82, 183, 136, 0.08); padding: 8px; border-radius: 4px; border: 1px solid rgba(82, 183, 136, 0.2); line-height: 1.4; }
+
+        /* Switch 样式 */
+        .switch { position: relative; display: inline-block; width: 34px; height: 18px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #14213d; transition: .4s; border-radius: 18px; border: 1px solid #005f73; }
+        .slider:before { position: absolute; content: ""; height: 12px; width: 12px; left: 2px; bottom: 2px; background-color: #8093a6; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: #0077b6; border-color: #00e5ff; }
+        input:checked + .slider:before { transform: translateX(16px); background-color: #00e5ff; }
+
+        /* Button 样式 */
+        .action-btn {
+            width: 100%; background: #0077b6; border: 1px solid #005f73; color: #e0f7fa;
+            padding: 10px; border-radius: 6px; font-size: 12px; cursor: pointer;
+            font-weight: 500; transition: all 0.3s; text-align: center;
+        }
+        .action-btn:hover { background: #0096c7; color: #fff; box-shadow: 0 0 10px rgba(0, 229, 255, 0.4); }
+        .action-btn.secondary { background: rgba(0, 119, 182, 0.15); }
+        .action-btn.secondary:hover { background: rgba(0, 119, 182, 0.4); }
+
+        /* 🚨 全局加载进度条遮罩层样式 */
+        #loading-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(5, 8, 15, 0.85); z-index: 999;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            color: #00e5ff; backdrop-filter: blur(10px);
+            opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+        }
+        #loading-overlay.active { opacity: 1; pointer-events: auto; }
+        .loading-title { font-size: 16px; font-weight: 600; margin-bottom: 12px; letter-spacing: 1px; color: #e0f7fa; }
+        .progress-container { width: 280px; height: 6px; background: #14213d; border-radius: 4px; border: 1px solid #005f73; overflow: hidden; }
+        .progress-bar-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #0077b6, #00e5ff); transition: width 0.1s ease; }
+        .progress-text { font-size: 13px; font-family: monospace; margin-top: 8px; color: #64dfdf; }
+    </style>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+</head>
+<body>
+
+    <div id="canvas-container"></div>
+
+    <!-- 🚨 进度条核心组件 DOM -->
+    <div id="loading-overlay">
+        <div id="loading-title-text" class="loading-title">⚡ 正在解析三维数据模型 Loading...</div>
+        <div class="progress-container">
+            <div id="main-progress-bar" class="progress-bar-fill"></div>
+        </div>
+        <div id="main-progress-text" class="progress-text">0%</div>
+    </div>
+
+    <div id="ui-container">
+        <h3>⚡ Lumina Calibrator</h3>
+        <div class="sub-title">Supports one-click export and import of the entire environment, configuration, and codebase.</div>
+        
+        <div class="file-upload-wrapper">
+            <label>1. 加载模型 Load Model (.glb, .gltf)</label>
+            <input type="file" id="file-input" accept=".glb, .gltf">
+        </div>
+        
+        <div class="file-upload-wrapper">
+            <label>2. 加载环境光贴图 Load HDRI (.exr)</label>
+            <input type="file" id="exr-input" accept=".exr">
+        </div>
+
+        <div class="control-group" style="flex-direction: row; justify-content: space-between; align-items: center; margin-top: 8px;">
+            <div style="color: #90e0ef; font-size: 12px;">EXR 背景对摄像机可见 Show EXR Background to Camera</div>
+            <label class="switch">
+                <input type="checkbox" id="exr-visible-toggle">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="control-group">
+            <div class="control-label"><span style="color:#ffb703;">地面反射高度 (Y-Offset):</span><span id="reflector-y-val" class="value-display" style="color:#ffb703;">0.00</span></div>
+            <input type="range" id="reflector-y-slider" min="-2.0" max="2.0" step="0.01" value="0.00" style="accent-color: #ffb703;">
+        </div>
+        <!-- ✨ 改动 1：地面反射模糊度最大值改为 10.0 -->
+        <div class="control-group">
+            <div class="control-label"><span style="color:#ffb703;">反射模糊度 (Blur):</span><span id="reflector-blur-val" class="value-display" style="color:#ffb703;">0.50</span></div>
+            <input type="range" id="reflector-blur-slider" min="0.0" max="10.0" step="0.01" value="0.50" style="accent-color: #ffb703;">
+        </div>
+        <!-- ✨ 改动 2：新增倒影亮度控制滑块 -->
+        <div class="control-group">
+            <div class="control-label"><span style="color:#ffb703;">倒影亮度 (Intensity):</span><span id="reflector-intensity-val" class="value-display" style="color:#ffb703;">1.00</span></div>
+            <input type="range" id="reflector-intensity-slider" min="0.0" max="10.0" step="0.01" value="1.00" style="accent-color: #ffb703;">
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="control-group">
+            <div class="control-label"><span>模型原生发光倍数 (Emission Multiplier):</span><span id="multiplier-val" class="value-display">1.0x</span></div>
+            <input type="range" id="emission-multiplier" min="0.1" max="5" step="0.1" value="1.0">
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="control-group">
+            <div class="control-label"><span style="color:#00ff88;">地面反射光晕 (Bounce):</span><span id="light-int-val" class="value-display" style="color:#00ff88;">5.0</span></div>
+            <input type="range" id="light-intensity" min="0" max="20" step="0.1" value="5.0" style="accent-color: #00ff88;">
+        </div>
+        <div class="control-group">
+            <div class="control-label"><span style="color:#00ff88;">暗部环境能见度 (Ambient):</span><span id="ambient-val" class="value-display" style="color:#00ff88;">0.2</span></div>
+            <input type="range" id="ambient-intensity" min="0" max="2" step="0.1" value="0.2" style="accent-color: #00ff88;">
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="control-group">
+            <div class="control-label"><span>画面对比度 (Contrast):</span><span id="contrast-val" class="value-display">1.00</span></div>
+            <input type="range" id="contrast-slider" min="0.5" max="2.0" step="0.01" value="1.00">
+        </div>
+
+        <div class="control-group">
+            <div class="control-label"><span>辉光溢出强度 (Bloom):</span><span id="strength-val" class="value-display">0.20</span></div>
+            <input type="range" id="bloom-strength" min="0" max="2" step="0.05" value="0.20">
+        </div>
+        <div class="control-group">
+            <div class="control-label"><span>辉光截断阈值 (Threshold):</span><span id="threshold-val" class="value-display">0.6</span></div>
+            <input type="range" id="bloom-threshold" min="0" max="2" step="0.1" value="0.6">
+        </div>
+        <div class="control-group">
+            <div class="control-label"><span>辉光扩散半径 (Radius):</span><span id="radius-val" class="value-display">0.4</span></div>
+            <input type="range" id="bloom-radius" min="0" max="2" step="0.1" value="0.4">
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="control-group">
+            <button id="export-code-btn" class="action-btn">📤 导出当前完整代码 (Export Current Code) (.js)</button>
+        </div>
+        <div class="control-group" style="flex-direction: row; gap: 8px; margin-top: 8px;">
+            <button id="export-params-btn" class="action-btn secondary">💾 导出参数 (Export Parameters) (JSON)</button>
+            <button id="import-params-btn" class="action-btn secondary">📂 导入参数 (Import Parameters)</button>
+        </div>
+        <input type="file" id="param-import-input" accept=".json" style="display:none;">
+
+        <div class="status-box">
+           Enjoy.<br>
+            :)
+        </div>
+    </div>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { MapControls } from 'three/addons/controls/MapControls.js';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        import { EXRLoader } from 'three/addons/loaders/EXRLoader.js';
+        import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+        import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+        import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+        import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+        import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+        // 🚨 引入官方平面反射组件
+        import { Reflector } from 'three/addons/objects/Reflector.js';
+
+        // 自定义对比度着色器
+        const ContrastShader = {
+            uniforms: {
+                "tDiffuse": { value: null },
+                "contrast": { value: 1.0 }
+            },
+            vertexShader: `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+            fragmentShader: `varying vec2 vUv; uniform sampler2D tDiffuse; uniform float contrast; void main() { vec4 color = texture2D(tDiffuse, vUv); color.rgb = (color.rgb - 0.5) * contrast + 0.5; gl_FragColor = color; }`
+        };
+
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x000000); 
+
+        // DOM 元素引用
+        const inputs = {
+            multiplier: document.getElementById('emission-multiplier'),
+            lightInt: document.getElementById('light-intensity'),
+            ambient: document.getElementById('ambient-intensity'),
+            contrast: document.getElementById('contrast-slider'),
+            strength: document.getElementById('bloom-strength'),
+            threshold: document.getElementById('bloom-threshold'),
+            radius: document.getElementById('bloom-radius'),
+            exrToggle: document.getElementById('exr-visible-toggle'),
+            reflectorY: document.getElementById('reflector-y-slider'),
+            reflectorBlur: document.getElementById('reflector-blur-slider'), // 新增模糊滑块
+            reflectorIntensity: document.getElementById('reflector-intensity-slider') // 新增亮度滑块
+        };
+        const displays = {
+            multiplier: document.getElementById('multiplier-val'),
+            lightInt: document.getElementById('light-int-val'),
+            ambient: document.getElementById('ambient-val'),
+            contrast: document.getElementById('contrast-val'),
+            strength: document.getElementById('strength-val'),
+            threshold: document.getElementById('threshold-val'),
+            radius: document.getElementById('radius-val'),
+            reflectorY: document.getElementById('reflector-y-val'),
+            reflectorBlur: document.getElementById('reflector-blur-val'), // 新增模糊看板
+            reflectorIntensity: document.getElementById('reflector-intensity-val') // 新增亮度看板
+        };
+
+        // 进度条 DOM 节点引用
+        const overlay = document.getElementById('loading-overlay');
+        const titleText = document.getElementById('loading-title-text');
+        const progressBar = document.getElementById('main-progress-bar');
+        const progressText = document.getElementById('main-progress-text');
+
+        // 核心补光与后期组件
+        const ambientLight = new THREE.AmbientLight(0xffffff, Number(inputs.ambient.value));
+        scene.add(ambientLight);
+
+        const bounceLight = new THREE.PointLight(0x00aaff, Number(inputs.lightInt.value), 500); 
+        bounceLight.position.set(0, 10, 0);
+        scene.add(bounceLight);
+
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100000);
+        camera.position.set(0, 5, 10);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: "high-performance" });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        
+        renderer.outputColorSpace = THREE.SRGBColorSpace; 
+        renderer.toneMapping = THREE.AgXToneMapping; 
+        renderer.toneMappingExposure = 1.0; 
+        
+        const canvasContainer = document.getElementById('canvas-container');
+        canvasContainer.innerHTML = '';
+        canvasContainer.appendChild(renderer.domElement);
+
+        const composer = new EffectComposer(renderer);
+        composer.addPass(new RenderPass(scene, camera));
+        
+        const bloomPass = new UnrealBloomPass(
+            new THREE.Vector2(window.innerWidth, window.innerHeight), 
+            Number(inputs.strength.value), 
+            Number(inputs.radius.value), 
+            Number(inputs.threshold.value)
+        );
+        composer.addPass(bloomPass);
+
+        const contrastPass = new ShaderPass(ContrastShader);
+        contrastPass.uniforms["contrast"].value = Number(inputs.contrast.value);
+        composer.addPass(contrastPass);
+        
+        composer.addPass(new OutputPass());
+
+        const controls = new MapControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.maxPolarAngle = Math.PI / 2 - 0.05;
+
+        let currentModel = null;
+        let exrTexture = null;
+        let groundReflector = null; // 全局持有反射对象
+        let baseReflectorY = 0;     // 记录模型最底部的原始基准坐标
+
+        const gltfLoader = new GLTFLoader();
+        const exrLoader = new EXRLoader();
+
+        // 统一进度条显示工具函数
+        function showProgress(title) {
+            titleText.textContent = title;
+            progressBar.style.width = '0%';
+            progressText.textContent = '0%';
+            overlay.classList.add('active');
+        }
+
+        function updateProgress(xhr) {
+            if (xhr.total > 0) {
+                const percent = Math.round((xhr.loaded / xhr.total) * 100);
+                progressBar.style.width = percent + '%';
+                progressText.textContent = percent + '%';
+            } else {
+                progressText.textContent = (xhr.loaded / 1024 / 1024).toFixed(1) + ' MB Loaded';
+            }
+        }
+
+        function hideProgress() {
+            overlay.classList.remove('active');
+        }
+
+        // 1. 加载 GLB 模型
+        document.getElementById('file-input').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const url = URL.createObjectURL(file);
+            
+            showProgress("⚡ 正在解析并构建三维模型资产...");
+
+            gltfLoader.load(url, function(gltf) {
+                if (currentModel) scene.remove(currentModel);
+                currentModel = gltf.scene;
+
+                currentModel.traverse((node) => {
+                    if (node.isMesh && node.material) {
+                        const mats = Array.isArray(node.material) ? node.material : [node.material];
+                        mats.forEach(mat => {
+                            if (mat.emissive !== undefined) {
+                                node.userData.baseEmissiveIntensity = mat.emissiveIntensity || 0;
+                            }
+                        });
+                    }
+                });
+
+                const box = new THREE.Box3().setFromObject(currentModel);
+                const size = box.getSize(new THREE.Vector3());
+                const center = box.getCenter(new THREE.Vector3());
+                const maxDim = Math.max(size.x, size.y, size.z);
+                
+                currentModel.position.sub(center); 
+                bounceLight.position.set(0, maxDim * 0.1, 0); 
+                bounceLight.distance = maxDim * 1.5;
+                
+                camera.position.set(0, maxDim * 1.2, maxDim * 1.8);
+                camera.lookAt(0, 0, 0);
+                controls.target.set(0, 0, 0);
+
+                controls.minDistance = maxDim * 0.05; 
+                controls.maxDistance = maxDim * 5.0;  
+
+                // 🚨 性能极限优化型平面反射镜面组件创建
+                if (groundReflector) {
+                    scene.remove(groundReflector);
+                    groundReflector.dispose();
+                }
+
+                const refGeometry = new THREE.PlaneGeometry(maxDim * 6, maxDim * 6, 32, 32);
+                groundReflector = new Reflector(refGeometry, {
+                    clipBias: 0.003,
+                    // 💡 核心性能优化 1：硬性限制纹理分辨率为 512x512
+                    textureWidth: 512, 
+                    textureHeight: 512,
+                    color: 0x1a2436 // 暗色镜面，完美融合暗调科技感数字孪生底座
+                });
+
+                groundReflector.material.transparent = true;
+                groundReflector.material.blending = THREE.AdditiveBlending;
+                groundReflector.material.depthWrite = false; 
+
+                // 💡 核心性能优化 2：重写底层着色器，注入纯手工展开的 9-Tap (九点) 高斯模糊算法
+                // 这样能够在不使用任何多余循环运算的前提下，直接在 Fragment 层级生成完美的虚化光晕
+                groundReflector.material.fragmentShader = `
+                    uniform sampler2D tDiffuse;
+                    uniform vec3 color;
+                    uniform float blurSize;
+                    uniform float intensity; // 新增亮度控制变量
+                    varying vec4 vUv;
+                    void main() {
+                        vec4 base = vec4(0.0);
+                        vec4 uv;
+                        
+                        // 展开循环进行 3x3 (9-Tap) 快速加权高斯采样
+                        uv = vUv; uv.x -= blurSize * vUv.w; uv.y -= blurSize * vUv.w; base += texture2DProj(tDiffuse, uv) * 0.0625;
+                        uv = vUv;                           uv.y -= blurSize * vUv.w; base += texture2DProj(tDiffuse, uv) * 0.125;
+                        uv = vUv; uv.x += blurSize * vUv.w; uv.y -= blurSize * vUv.w; base += texture2DProj(tDiffuse, uv) * 0.0625;
+                        
+                        uv = vUv; uv.x -= blurSize * vUv.w;                           base += texture2DProj(tDiffuse, uv) * 0.125;
+                        uv = vUv;                                                     base += texture2DProj(tDiffuse, uv) * 0.25;
+                        uv = vUv; uv.x += blurSize * vUv.w;                           base += texture2DProj(tDiffuse, uv) * 0.125;
+                        
+                        uv = vUv; uv.x -= blurSize * vUv.w; uv.y += blurSize * vUv.w; base += texture2DProj(tDiffuse, uv) * 0.0625;
+                        uv = vUv;                           uv.y += blurSize * vUv.w; base += texture2DProj(tDiffuse, uv) * 0.125;
+                        uv = vUv; uv.x += blurSize * vUv.w; uv.y += blurSize * vUv.w; base += texture2DProj(tDiffuse, uv) * 0.0625;
+                        
+                        // 注入强度变量进行提亮/压暗
+                        gl_FragColor = vec4( base.rgb * color * intensity, 1.0 );
+                        #include <tonemapping_fragment>
+                        #include <colorspace_fragment>
+                    }
+                `;
+                
+                // 将滑块的 0-2 映射为适合 shader 采样的微小 UV 偏移量
+                groundReflector.material.uniforms.blurSize = { value: Number(inputs.reflectorBlur.value) * 0.005 };
+                groundReflector.material.uniforms.intensity = { value: Number(inputs.reflectorIntensity.value) }; // 注入亮度参数
+
+                // 计算并保存模型的绝对底部基准 Y 值
+                baseReflectorY = -size.y / 2;
+                groundReflector.position.y = baseReflectorY + Number(inputs.reflectorY.value);
+                groundReflector.rotateX(-Math.PI / 2);
+                scene.add(groundReflector);
+
+                scene.add(currentModel);
+                URL.revokeObjectURL(url);
+                
+                hideProgress();
+            }, function(xhr) {
+                updateProgress(xhr);
+            }, function(error) {
+                console.error(error);
+                hideProgress();
+                alert("❌ GLB 模型解析发生异常。");
+            });
+        });
+
+        // 2. 加载 EXR 贴图
+        document.getElementById('exr-input').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const url = URL.createObjectURL(file);
+            
+            showProgress("🌌 正在读取并解压 EXR 高动态范围贴图...");
+
+            exrLoader.load(url, function(texture) {
+                texture.mapping = THREE.EquirectangularReflectionMapping;
+                exrTexture = texture;
+                scene.environment = exrTexture;
+                scene.background = inputs.exrToggle.checked ? exrTexture : new THREE.Color(0x000000);
+                URL.revokeObjectURL(url);
+                
+                hideProgress();
+            }, function(xhr) {
+                updateProgress(xhr);
+            }, function(error) {
+                console.error(error);
+                hideProgress();
+                alert("❌ EXR 读取失败。");
+            });
+        });
+
+        // 3. EXR 背景可见性 开关
+        inputs.exrToggle.addEventListener('change', function(e) {
+            if (exrTexture) {
+                scene.background = e.target.checked ? exrTexture : new THREE.Color(0x000000);
+            }
+        });
+
+        // 🚨 新增：地面反射高度与模糊滑块微调交互
+        inputs.reflectorY.addEventListener('input', (e) => {
+            const val = Number(e.target.value);
+            displays.reflectorY.textContent = val.toFixed(2);
+            if (groundReflector) {
+                groundReflector.position.y = baseReflectorY + val;
+            }
+        });
+        
+        inputs.reflectorBlur.addEventListener('input', (e) => {
+            const val = Number(e.target.value);
+            displays.reflectorBlur.textContent = val.toFixed(2);
+            if (groundReflector) {
+                groundReflector.material.uniforms.blurSize.value = val * 0.005;
+            }
+        });
+
+        inputs.reflectorIntensity.addEventListener('input', (e) => {
+            const val = Number(e.target.value);
+            displays.reflectorIntensity.textContent = val.toFixed(2);
+            if (groundReflector) {
+                groundReflector.material.uniforms.intensity.value = val;
+            }
+        });
+
+        // 滑块交互逻辑更新
+        inputs.multiplier.addEventListener('input', (e) => { displays.multiplier.textContent = Number(e.target.value).toFixed(1) + "x"; });
+        inputs.lightInt.addEventListener('input', (e) => { const val = Number(e.target.value); displays.lightInt.textContent = val.toFixed(1); bounceLight.intensity = val; });
+        inputs.ambient.addEventListener('input', (e) => { const val = Number(e.target.value); displays.ambient.textContent = val.toFixed(1); ambientLight.intensity = val; });
+        inputs.contrast.addEventListener('input', (e) => { const val = Number(e.target.value); displays.contrast.textContent = val.toFixed(2); contrastPass.uniforms["contrast"].value = val; });
+        inputs.strength.addEventListener('input', (e) => { const val = Number(e.target.value); displays.strength.textContent = val.toFixed(2); bloomPass.strength = val; });
+        inputs.threshold.addEventListener('input', (e) => { const val = Number(e.target.value); displays.threshold.textContent = val.toFixed(1); bloomPass.threshold = val; });
+        inputs.radius.addEventListener('input', (e) => { const val = Number(e.target.value); displays.radius.textContent = val.toFixed(1); bloomPass.radius = val; });
+
+        // 4. 导出当前校准完的代码 (.js)
+        document.getElementById('export-code-btn').addEventListener('click', function() {
+            inputs.multiplier.setAttribute('value', inputs.multiplier.value);
+            inputs.lightInt.setAttribute('value', inputs.lightInt.value);
+            inputs.ambient.setAttribute('value', inputs.ambient.value);
+            inputs.contrast.setAttribute('value', inputs.contrast.value);
+            inputs.strength.setAttribute('value', inputs.strength.value);
+            inputs.threshold.setAttribute('value', inputs.threshold.value);
+            inputs.radius.setAttribute('value', inputs.radius.value);
+            inputs.reflectorY.setAttribute('value', inputs.reflectorY.value); 
+            inputs.reflectorBlur.setAttribute('value', inputs.reflectorBlur.value); // 新增状态保持
+            inputs.reflectorIntensity.setAttribute('value', inputs.reflectorIntensity.value); // 新增亮度状态保持
+            
+            if (inputs.exrToggle.checked) {
+                inputs.exrToggle.setAttribute('checked', 'checked');
+            } else {
+                inputs.exrToggle.removeAttribute('checked');
+            }
+
+            let docString = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+            docString = docString.replace(/<div id="canvas-container">[\s\S]*?<\/div>/, '<div id="canvas-container"></div>');
+
+            const blob = new Blob([docString], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'gltf_calibrated_setup.js';
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+
+        // 5. 导出参数 (JSON)
+        document.getElementById('export-params-btn').addEventListener('click', function() {
+            const configData = {
+                multiplier: inputs.multiplier.value,
+                lightIntensity: inputs.lightInt.value,
+                ambientIntensity: inputs.ambient.value,
+                contrast: inputs.contrast.value,
+                bloomStrength: inputs.strength.value,
+                bloomThreshold: inputs.threshold.value,
+                bloomRadius: inputs.radius.value,
+                exrToggle: inputs.exrToggle.checked,
+                reflectorY: inputs.reflectorY.value, 
+                reflectorBlur: inputs.reflectorBlur.value, // 新增
+                reflectorIntensity: inputs.reflectorIntensity.value // 新增亮度
+            };
+            const blob = new Blob([JSON.stringify(configData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'gltf_calibrator_params.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+
+        // 6. 导入参数 (JSON)
+        const paramImportInput = document.getElementById('param-import-input');
+        document.getElementById('import-params-btn').addEventListener('click', () => paramImportInput.click());
+
+        paramImportInput.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    if (data.multiplier !== undefined) inputs.multiplier.value = data.multiplier;
+                    if (data.lightIntensity !== undefined) inputs.lightInt.value = data.lightIntensity;
+                    if (data.ambientIntensity !== undefined) inputs.ambient.value = data.ambientIntensity;
+                    if (data.contrast !== undefined) inputs.contrast.value = data.contrast;
+                    if (data.bloomStrength !== undefined) inputs.strength.value = data.bloomStrength;
+                    if (data.bloomThreshold !== undefined) inputs.threshold.value = data.bloomThreshold;
+                    if (data.bloomRadius !== undefined) inputs.radius.value = data.bloomRadius;
+                    if (data.exrToggle !== undefined) inputs.exrToggle.checked = data.exrToggle;
+                    if (data.reflectorY !== undefined) inputs.reflectorY.value = data.reflectorY; 
+                    if (data.reflectorBlur !== undefined) inputs.reflectorBlur.value = data.reflectorBlur; // 新增
+                    if (data.reflectorIntensity !== undefined) inputs.reflectorIntensity.value = data.reflectorIntensity; // 新增亮度
+
+                    displays.multiplier.textContent = Number(inputs.multiplier.value).toFixed(1) + "x";
+                    displays.lightInt.textContent = Number(inputs.lightInt.value).toFixed(1);
+                    displays.ambient.textContent = Number(inputs.ambient.value).toFixed(1);
+                    displays.contrast.textContent = Number(inputs.contrast.value).toFixed(2);
+                    displays.strength.textContent = Number(inputs.strength.value).toFixed(2);
+                    displays.threshold.textContent = Number(inputs.threshold.value).toFixed(1);
+                    displays.radius.textContent = Number(inputs.radius.value).toFixed(1);
+                    displays.reflectorY.textContent = Number(inputs.reflectorY.value).toFixed(2); 
+                    displays.reflectorBlur.textContent = Number(inputs.reflectorBlur.value).toFixed(2); // 新增
+                    displays.reflectorIntensity.textContent = Number(inputs.reflectorIntensity.value).toFixed(2); // 新增亮度
+
+                    bloomPass.strength = Number(inputs.strength.value);
+                    bloomPass.threshold = Number(inputs.threshold.value);
+                    bloomPass.radius = Number(inputs.radius.value);
+                    contrastPass.uniforms["contrast"].value = Number(inputs.contrast.value);
+                    bounceLight.intensity = Number(inputs.lightInt.value);
+                    ambientLight.intensity = Number(inputs.ambient.value);
+
+                    if (exrTexture) {
+                        scene.background = inputs.exrToggle.checked ? exrTexture : new THREE.Color(0x000000);
+                    }
+
+                    if (groundReflector) { 
+                        groundReflector.position.y = baseReflectorY + Number(inputs.reflectorY.value);
+                        groundReflector.material.uniforms.blurSize.value = Number(inputs.reflectorBlur.value) * 0.005; // 新增同步
+                        groundReflector.material.uniforms.intensity.value = Number(inputs.reflectorIntensity.value); // 新增亮度同步
+                    }
+
+                    alert("🎉 配置文件导入并应用成功！");
+                } catch (err) {
+                    alert("❌ 导入失败，请确保该文件是标准的参数 JSON 配置文件。");
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = ''; 
+        });
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            if (currentModel) {
+                const userMultiplier = Number(inputs.multiplier.value);
+                currentModel.traverse((node) => {
+                    if (node.isMesh && node.userData.baseEmissiveIntensity !== undefined) {
+                        const mats = Array.isArray(node.material) ? node.material : [node.material];
+                        mats.forEach(mat => { mat.emissiveIntensity = node.userData.baseEmissiveIntensity * userMultiplier; });
+                    }
+                });
+            }
+            composer.render();
+        }
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            composer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>

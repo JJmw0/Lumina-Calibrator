@@ -540,32 +540,17 @@
         inputs.threshold.addEventListener('input', (e) => { const val = Number(e.target.value); displays.threshold.textContent = val.toFixed(1); bloomPass.threshold = val; });
         inputs.radius.addEventListener('input', (e) => { const val = Number(e.target.value); displays.radius.textContent = val.toFixed(1); bloomPass.radius = val; });
 
-        // 4. 导出当前校准完的代码 (.js)
+        // 4. 导出当前校准完的代码 (Export Current Code) (.js)
         document.getElementById('export-code-btn').addEventListener('click', function() {
-            inputs.multiplier.setAttribute('value', inputs.multiplier.value);
-            inputs.lightInt.setAttribute('value', inputs.lightInt.value);
-            inputs.ambient.setAttribute('value', inputs.ambient.value);
-            inputs.contrast.setAttribute('value', inputs.contrast.value);
-            inputs.strength.setAttribute('value', inputs.strength.value);
-            inputs.threshold.setAttribute('value', inputs.threshold.value);
-            inputs.radius.setAttribute('value', inputs.radius.value);
-            inputs.reflectorY.setAttribute('value', inputs.reflectorY.value); 
-            inputs.reflectorBlur.setAttribute('value', inputs.reflectorBlur.value); 
-            inputs.reflectorIntensity.setAttribute('value', inputs.reflectorIntensity.value); 
-            inputs.exposure.setAttribute('value', inputs.exposure.value); // ✨
-            inputs.lightMultiplier.setAttribute('value', inputs.lightMultiplier.value); // ✨
-            
-            if (inputs.exrToggle.checked) {
-                inputs.exrToggle.setAttribute('checked', 'checked');
-            } else {
-                inputs.exrToggle.removeAttribute('checked');
-            }
-
-            if (inputs.reflectorToggle.checked) {
-                inputs.reflectorToggle.setAttribute('checked', 'checked');
-            } else {
-                inputs.reflectorToggle.removeAttribute('checked');
-            }
+            // 💡 极限自查修复：使用自动遍历机制，彻底避免后续新增 UI 参数被遗漏
+            Object.values(inputs).forEach(input => {
+                if (input.type === 'checkbox') {
+                    if (input.checked) input.setAttribute('checked', 'checked');
+                    else input.removeAttribute('checked');
+                } else {
+                    input.setAttribute('value', input.value);
+                }
+            });
 
             let docString = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
             docString = docString.replace(/<div id="canvas-container">[\s\S]*?<\/div>/, '<div id="canvas-container"></div>');
@@ -581,22 +566,16 @@
 
         // 5. 导出参数 (JSON)
         document.getElementById('export-params-btn').addEventListener('click', function() {
-            const configData = {
-                multiplier: inputs.multiplier.value,
-                lightIntensity: inputs.lightInt.value,
-                ambientIntensity: inputs.ambient.value,
-                contrast: inputs.contrast.value,
-                bloomStrength: inputs.strength.value,
-                bloomThreshold: inputs.threshold.value,
-                bloomRadius: inputs.radius.value,
-                exrToggle: inputs.exrToggle.checked,
-                reflectorToggle: inputs.reflectorToggle.checked,
-                reflectorY: inputs.reflectorY.value, 
-                reflectorBlur: inputs.reflectorBlur.value, 
-                reflectorIntensity: inputs.reflectorIntensity.value,
-                exposure: inputs.exposure.value, // ✨
-                lightMultiplier: inputs.lightMultiplier.value // ✨
-            };
+            const configData = {};
+            // 💡 极限自查修复：动态遍历读取对象，100% 覆盖面板上的所有 14 个交互节点
+            for (const key in inputs) {
+                configData[key] = inputs[key].type === 'checkbox' ? inputs[key].checked : inputs[key].value;
+            }
+            
+            // ✨ 额外彩蛋：把摄像机机位也一并保存，这才是完整的“环境记录”
+            configData.cameraPosition = camera.position.toArray();
+            configData.controlsTarget = controls.target.toArray();
+
             const blob = new Blob([JSON.stringify(configData, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -619,54 +598,26 @@
                 try {
                     const data = JSON.parse(e.target.result);
                     
-                    if (data.multiplier !== undefined) inputs.multiplier.value = data.multiplier;
-                    if (data.lightIntensity !== undefined) inputs.lightInt.value = data.lightIntensity;
-                    if (data.ambientIntensity !== undefined) inputs.ambient.value = data.ambientIntensity;
-                    if (data.contrast !== undefined) inputs.contrast.value = data.contrast;
-                    if (data.bloomStrength !== undefined) inputs.strength.value = data.bloomStrength;
-                    if (data.bloomThreshold !== undefined) inputs.threshold.value = data.bloomThreshold;
-                    if (data.bloomRadius !== undefined) inputs.radius.value = data.bloomRadius;
-                    if (data.exrToggle !== undefined) inputs.exrToggle.checked = data.exrToggle;
-                    if (data.reflectorToggle !== undefined) inputs.reflectorToggle.checked = data.reflectorToggle;
-                    if (data.reflectorY !== undefined) inputs.reflectorY.value = data.reflectorY; 
-                    if (data.reflectorBlur !== undefined) inputs.reflectorBlur.value = data.reflectorBlur; 
-                    if (data.reflectorIntensity !== undefined) inputs.reflectorIntensity.value = data.reflectorIntensity; 
-                    if (data.exposure !== undefined) inputs.exposure.value = data.exposure; // ✨
-                    if (data.lightMultiplier !== undefined) inputs.lightMultiplier.value = data.lightMultiplier; // ✨
-
-                    displays.multiplier.textContent = Number(inputs.multiplier.value).toFixed(1) + "x";
-                    displays.lightInt.textContent = Number(inputs.lightInt.value).toFixed(1);
-                    displays.ambient.textContent = Number(inputs.ambient.value).toFixed(1);
-                    displays.contrast.textContent = Number(inputs.contrast.value).toFixed(2);
-                    displays.strength.textContent = Number(inputs.strength.value).toFixed(2);
-                    displays.threshold.textContent = Number(inputs.threshold.value).toFixed(1);
-                    displays.radius.textContent = Number(inputs.radius.value).toFixed(1);
-                    displays.reflectorY.textContent = Number(inputs.reflectorY.value).toFixed(2); 
-                    displays.reflectorBlur.textContent = Number(inputs.reflectorBlur.value).toFixed(2); 
-                    displays.reflectorIntensity.textContent = Number(inputs.reflectorIntensity.value).toFixed(2); 
-                    displays.exposure.textContent = Number(inputs.exposure.value).toFixed(2); // ✨
-                    displays.lightMultiplier.textContent = Number(inputs.lightMultiplier.value).toFixed(2) + "x"; // ✨
-
-                    bloomPass.strength = Number(inputs.strength.value);
-                    bloomPass.threshold = Number(inputs.threshold.value);
-                    bloomPass.radius = Number(inputs.radius.value);
-                    contrastPass.uniforms["contrast"].value = Number(inputs.contrast.value);
-                    bounceLight.intensity = Number(inputs.lightInt.value);
-                    ambientLight.intensity = Number(inputs.ambient.value);
-                    renderer.toneMappingExposure = Number(inputs.exposure.value); // ✨ 同步相机曝光
-
-                    if (exrTexture) {
-                        scene.background = inputs.exrToggle.checked ? exrTexture : new THREE.Color(0x000000);
+                    // 💡 极限自查修复：动态遍历覆盖，并利用 dispatchEvent 自动唤醒所有渲染管线更新
+                    for (const key in data) {
+                        if (inputs[key]) {
+                            if (inputs[key].type === 'checkbox') {
+                                inputs[key].checked = data[key];
+                            } else {
+                                inputs[key].value = data[key];
+                            }
+                            // 核心：强制模拟鼠标交互，触发面板 UI 的文字更新和底层 3D 渲染逻辑的同步
+                            inputs[key].dispatchEvent(new Event('input'));
+                            inputs[key].dispatchEvent(new Event('change'));
+                        }
                     }
 
-                    if (groundReflector) { 
-                        groundReflector.visible = inputs.reflectorToggle.checked;
-                        groundReflector.position.y = baseReflectorY + Number(inputs.reflectorY.value);
-                        groundReflector.material.uniforms.blurSize.value = Number(inputs.reflectorBlur.value) * 0.005; 
-                        groundReflector.material.uniforms.intensity.value = Number(inputs.reflectorIntensity.value); 
-                    }
+                    // 恢复相机的完美机位
+                    if (data.cameraPosition) camera.position.fromArray(data.cameraPosition);
+                    if (data.controlsTarget) controls.target.fromArray(data.controlsTarget);
+                    controls.update();
 
-                    alert("🎉 配置文件导入并应用成功！");
+                    alert("🎉 配置文件导入并应用成功！\n(已无死角覆盖面板全部设置及相机机位)");
                 } catch (err) {
                     alert("❌ 导入失败，请确保该文件是标准的参数 JSON 配置文件。");
                 }

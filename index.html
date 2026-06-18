@@ -119,16 +119,22 @@
 
         <div class="divider"></div>
 
+        <div class="control-group" style="flex-direction: row; justify-content: space-between; align-items: center;">
+            <div style="color: #ffb703; font-size: 12px; font-weight: bold;">✨ 开启地面镜面倒影 (Reflector)</div>
+            <label class="switch">
+                <input type="checkbox" id="reflector-toggle" checked>
+                <span class="slider"></span>
+            </label>
+        </div>
+
         <div class="control-group">
             <div class="control-label"><span style="color:#ffb703;">地面反射高度 (Y-Offset):</span><span id="reflector-y-val" class="value-display" style="color:#ffb703;">0.00</span></div>
             <input type="range" id="reflector-y-slider" min="-2.0" max="2.0" step="0.01" value="0.00" style="accent-color: #ffb703;">
         </div>
-        <!-- ✨ 改动 1：地面反射模糊度最大值改为 10.0 -->
         <div class="control-group">
             <div class="control-label"><span style="color:#ffb703;">反射模糊度 (Blur):</span><span id="reflector-blur-val" class="value-display" style="color:#ffb703;">0.50</span></div>
             <input type="range" id="reflector-blur-slider" min="0.0" max="10.0" step="0.01" value="0.50" style="accent-color: #ffb703;">
         </div>
-        <!-- ✨ 改动 2：新增倒影亮度控制滑块 -->
         <div class="control-group">
             <div class="control-label"><span style="color:#ffb703;">倒影亮度 (Intensity):</span><span id="reflector-intensity-val" class="value-display" style="color:#ffb703;">1.00</span></div>
             <input type="range" id="reflector-intensity-slider" min="0.0" max="10.0" step="0.01" value="1.00" style="accent-color: #ffb703;">
@@ -136,9 +142,21 @@
 
         <div class="divider"></div>
 
+        <!-- ✨ 新增：全局曝光度控制（用于修复灯光物理单位过曝死白） -->
+        <div class="control-group">
+            <div class="control-label"><span style="color:#f72585;">相机曝光度 (Exposure):</span><span id="exposure-val" class="value-display" style="color:#f72585;">1.00</span></div>
+            <input type="range" id="exposure-slider" min="0.01" max="3.0" step="0.01" value="1.00" style="accent-color: #f72585;">
+        </div>
+
         <div class="control-group">
             <div class="control-label"><span>模型原生发光倍数 (Emission Multiplier):</span><span id="multiplier-val" class="value-display">1.0x</span></div>
             <input type="range" id="emission-multiplier" min="0.1" max="5" step="0.1" value="1.0">
+        </div>
+
+        <!-- ✨ 新增：内置物理灯光衰减器（直接控制点光源/聚光灯） -->
+        <div class="control-group">
+            <div class="control-label"><span>内置灯光倍数 (GLB Lights):</span><span id="light-multiplier-val" class="value-display">1.00x</span></div>
+            <input type="range" id="light-multiplier-slider" min="0.00" max="2.00" step="0.01" value="1.00">
         </div>
 
         <div class="divider"></div>
@@ -225,9 +243,12 @@
             threshold: document.getElementById('bloom-threshold'),
             radius: document.getElementById('bloom-radius'),
             exrToggle: document.getElementById('exr-visible-toggle'),
+            reflectorToggle: document.getElementById('reflector-toggle'),
             reflectorY: document.getElementById('reflector-y-slider'),
-            reflectorBlur: document.getElementById('reflector-blur-slider'), // 新增模糊滑块
-            reflectorIntensity: document.getElementById('reflector-intensity-slider') // 新增亮度滑块
+            reflectorBlur: document.getElementById('reflector-blur-slider'), 
+            reflectorIntensity: document.getElementById('reflector-intensity-slider'), 
+            exposure: document.getElementById('exposure-slider'), // ✨ 新增曝光输入
+            lightMultiplier: document.getElementById('light-multiplier-slider') // ✨ 新增物理灯光输入
         };
         const displays = {
             multiplier: document.getElementById('multiplier-val'),
@@ -238,8 +259,10 @@
             threshold: document.getElementById('threshold-val'),
             radius: document.getElementById('radius-val'),
             reflectorY: document.getElementById('reflector-y-val'),
-            reflectorBlur: document.getElementById('reflector-blur-val'), // 新增模糊看板
-            reflectorIntensity: document.getElementById('reflector-intensity-val') // 新增亮度看板
+            reflectorBlur: document.getElementById('reflector-blur-val'), 
+            reflectorIntensity: document.getElementById('reflector-intensity-val'), 
+            exposure: document.getElementById('exposure-val'), // ✨ 新增曝光显示
+            lightMultiplier: document.getElementById('light-multiplier-val') // ✨ 新增物理灯光显示
         };
 
         // 进度条 DOM 节点引用
@@ -265,7 +288,7 @@
         
         renderer.outputColorSpace = THREE.SRGBColorSpace; 
         renderer.toneMapping = THREE.AgXToneMapping; 
-        renderer.toneMappingExposure = 1.0; 
+        renderer.toneMappingExposure = Number(inputs.exposure.value); // 初始化使用滑块值
         
         const canvasContainer = document.getElementById('canvas-container');
         canvasContainer.innerHTML = '';
@@ -295,13 +318,12 @@
 
         let currentModel = null;
         let exrTexture = null;
-        let groundReflector = null; // 全局持有反射对象
-        let baseReflectorY = 0;     // 记录模型最底部的原始基准坐标
+        let groundReflector = null; 
+        let baseReflectorY = 0;     
 
         const gltfLoader = new GLTFLoader();
         const exrLoader = new EXRLoader();
 
-        // 统一进度条显示工具函数
         function showProgress(title) {
             titleText.textContent = title;
             progressBar.style.width = '0%';
@@ -330,7 +352,7 @@
 
             const url = URL.createObjectURL(file);
             
-            showProgress("⚡ 正在解析并构建三维模型资产...");
+            showProgress("⚡ 正在解析并构建三维模型资产 Loading...");
 
             gltfLoader.load(url, function(gltf) {
                 if (currentModel) scene.remove(currentModel);
@@ -344,6 +366,10 @@
                                 node.userData.baseEmissiveIntensity = mat.emissiveIntensity || 0;
                             }
                         });
+                    }
+                    // ✨ 抓取 GLB 原生包含的物理灯光 (PointLight, SpotLight 等)
+                    if (node.isLight) {
+                        node.userData.baseIntensity = node.intensity;
                     }
                 });
 
@@ -363,7 +389,6 @@
                 controls.minDistance = maxDim * 0.05; 
                 controls.maxDistance = maxDim * 5.0;  
 
-                // 🚨 性能极限优化型平面反射镜面组件创建
                 if (groundReflector) {
                     scene.remove(groundReflector);
                     groundReflector.dispose();
@@ -372,29 +397,25 @@
                 const refGeometry = new THREE.PlaneGeometry(maxDim * 6, maxDim * 6, 32, 32);
                 groundReflector = new Reflector(refGeometry, {
                     clipBias: 0.003,
-                    // 💡 核心性能优化 1：硬性限制纹理分辨率为 512x512
                     textureWidth: 512, 
                     textureHeight: 512,
-                    color: 0x1a2436 // 暗色镜面，完美融合暗调科技感数字孪生底座
+                    color: 0x1a2436
                 });
 
                 groundReflector.material.transparent = true;
                 groundReflector.material.blending = THREE.AdditiveBlending;
                 groundReflector.material.depthWrite = false; 
 
-                // 💡 核心性能优化 2：重写底层着色器，注入纯手工展开的 9-Tap (九点) 高斯模糊算法
-                // 这样能够在不使用任何多余循环运算的前提下，直接在 Fragment 层级生成完美的虚化光晕
                 groundReflector.material.fragmentShader = `
                     uniform sampler2D tDiffuse;
                     uniform vec3 color;
                     uniform float blurSize;
-                    uniform float intensity; // 新增亮度控制变量
+                    uniform float intensity; 
                     varying vec4 vUv;
                     void main() {
                         vec4 base = vec4(0.0);
                         vec4 uv;
                         
-                        // 展开循环进行 3x3 (9-Tap) 快速加权高斯采样
                         uv = vUv; uv.x -= blurSize * vUv.w; uv.y -= blurSize * vUv.w; base += texture2DProj(tDiffuse, uv) * 0.0625;
                         uv = vUv;                           uv.y -= blurSize * vUv.w; base += texture2DProj(tDiffuse, uv) * 0.125;
                         uv = vUv; uv.x += blurSize * vUv.w; uv.y -= blurSize * vUv.w; base += texture2DProj(tDiffuse, uv) * 0.0625;
@@ -407,21 +428,19 @@
                         uv = vUv;                           uv.y += blurSize * vUv.w; base += texture2DProj(tDiffuse, uv) * 0.125;
                         uv = vUv; uv.x += blurSize * vUv.w; uv.y += blurSize * vUv.w; base += texture2DProj(tDiffuse, uv) * 0.0625;
                         
-                        // 注入强度变量进行提亮/压暗
                         gl_FragColor = vec4( base.rgb * color * intensity, 1.0 );
                         #include <tonemapping_fragment>
                         #include <colorspace_fragment>
                     }
                 `;
                 
-                // 将滑块的 0-2 映射为适合 shader 采样的微小 UV 偏移量
                 groundReflector.material.uniforms.blurSize = { value: Number(inputs.reflectorBlur.value) * 0.005 };
-                groundReflector.material.uniforms.intensity = { value: Number(inputs.reflectorIntensity.value) }; // 注入亮度参数
+                groundReflector.material.uniforms.intensity = { value: Number(inputs.reflectorIntensity.value) }; 
 
-                // 计算并保存模型的绝对底部基准 Y 值
                 baseReflectorY = -size.y / 2;
                 groundReflector.position.y = baseReflectorY + Number(inputs.reflectorY.value);
                 groundReflector.rotateX(-Math.PI / 2);
+                groundReflector.visible = inputs.reflectorToggle.checked;
                 scene.add(groundReflector);
 
                 scene.add(currentModel);
@@ -470,7 +489,13 @@
             }
         });
 
-        // 🚨 新增：地面反射高度与模糊滑块微调交互
+        // 🚨 地面反射交互
+        inputs.reflectorToggle.addEventListener('change', function(e) {
+            if (groundReflector) {
+                groundReflector.visible = e.target.checked;
+            }
+        });
+
         inputs.reflectorY.addEventListener('input', (e) => {
             const val = Number(e.target.value);
             displays.reflectorY.textContent = val.toFixed(2);
@@ -495,7 +520,18 @@
             }
         });
 
-        // 滑块交互逻辑更新
+        // ✨ 曝光度与物理灯光调节
+        inputs.exposure.addEventListener('input', (e) => {
+            const val = Number(e.target.value);
+            displays.exposure.textContent = val.toFixed(2);
+            renderer.toneMappingExposure = val; // 实时同步相机曝光
+        });
+
+        inputs.lightMultiplier.addEventListener('input', (e) => {
+            displays.lightMultiplier.textContent = Number(e.target.value).toFixed(2) + "x";
+        });
+
+        // 其他滑块交互逻辑
         inputs.multiplier.addEventListener('input', (e) => { displays.multiplier.textContent = Number(e.target.value).toFixed(1) + "x"; });
         inputs.lightInt.addEventListener('input', (e) => { const val = Number(e.target.value); displays.lightInt.textContent = val.toFixed(1); bounceLight.intensity = val; });
         inputs.ambient.addEventListener('input', (e) => { const val = Number(e.target.value); displays.ambient.textContent = val.toFixed(1); ambientLight.intensity = val; });
@@ -514,13 +550,21 @@
             inputs.threshold.setAttribute('value', inputs.threshold.value);
             inputs.radius.setAttribute('value', inputs.radius.value);
             inputs.reflectorY.setAttribute('value', inputs.reflectorY.value); 
-            inputs.reflectorBlur.setAttribute('value', inputs.reflectorBlur.value); // 新增状态保持
-            inputs.reflectorIntensity.setAttribute('value', inputs.reflectorIntensity.value); // 新增亮度状态保持
+            inputs.reflectorBlur.setAttribute('value', inputs.reflectorBlur.value); 
+            inputs.reflectorIntensity.setAttribute('value', inputs.reflectorIntensity.value); 
+            inputs.exposure.setAttribute('value', inputs.exposure.value); // ✨
+            inputs.lightMultiplier.setAttribute('value', inputs.lightMultiplier.value); // ✨
             
             if (inputs.exrToggle.checked) {
                 inputs.exrToggle.setAttribute('checked', 'checked');
             } else {
                 inputs.exrToggle.removeAttribute('checked');
+            }
+
+            if (inputs.reflectorToggle.checked) {
+                inputs.reflectorToggle.setAttribute('checked', 'checked');
+            } else {
+                inputs.reflectorToggle.removeAttribute('checked');
             }
 
             let docString = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
@@ -546,9 +590,12 @@
                 bloomThreshold: inputs.threshold.value,
                 bloomRadius: inputs.radius.value,
                 exrToggle: inputs.exrToggle.checked,
+                reflectorToggle: inputs.reflectorToggle.checked,
                 reflectorY: inputs.reflectorY.value, 
-                reflectorBlur: inputs.reflectorBlur.value, // 新增
-                reflectorIntensity: inputs.reflectorIntensity.value // 新增亮度
+                reflectorBlur: inputs.reflectorBlur.value, 
+                reflectorIntensity: inputs.reflectorIntensity.value,
+                exposure: inputs.exposure.value, // ✨
+                lightMultiplier: inputs.lightMultiplier.value // ✨
             };
             const blob = new Blob([JSON.stringify(configData, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
@@ -580,9 +627,12 @@
                     if (data.bloomThreshold !== undefined) inputs.threshold.value = data.bloomThreshold;
                     if (data.bloomRadius !== undefined) inputs.radius.value = data.bloomRadius;
                     if (data.exrToggle !== undefined) inputs.exrToggle.checked = data.exrToggle;
+                    if (data.reflectorToggle !== undefined) inputs.reflectorToggle.checked = data.reflectorToggle;
                     if (data.reflectorY !== undefined) inputs.reflectorY.value = data.reflectorY; 
-                    if (data.reflectorBlur !== undefined) inputs.reflectorBlur.value = data.reflectorBlur; // 新增
-                    if (data.reflectorIntensity !== undefined) inputs.reflectorIntensity.value = data.reflectorIntensity; // 新增亮度
+                    if (data.reflectorBlur !== undefined) inputs.reflectorBlur.value = data.reflectorBlur; 
+                    if (data.reflectorIntensity !== undefined) inputs.reflectorIntensity.value = data.reflectorIntensity; 
+                    if (data.exposure !== undefined) inputs.exposure.value = data.exposure; // ✨
+                    if (data.lightMultiplier !== undefined) inputs.lightMultiplier.value = data.lightMultiplier; // ✨
 
                     displays.multiplier.textContent = Number(inputs.multiplier.value).toFixed(1) + "x";
                     displays.lightInt.textContent = Number(inputs.lightInt.value).toFixed(1);
@@ -592,8 +642,10 @@
                     displays.threshold.textContent = Number(inputs.threshold.value).toFixed(1);
                     displays.radius.textContent = Number(inputs.radius.value).toFixed(1);
                     displays.reflectorY.textContent = Number(inputs.reflectorY.value).toFixed(2); 
-                    displays.reflectorBlur.textContent = Number(inputs.reflectorBlur.value).toFixed(2); // 新增
-                    displays.reflectorIntensity.textContent = Number(inputs.reflectorIntensity.value).toFixed(2); // 新增亮度
+                    displays.reflectorBlur.textContent = Number(inputs.reflectorBlur.value).toFixed(2); 
+                    displays.reflectorIntensity.textContent = Number(inputs.reflectorIntensity.value).toFixed(2); 
+                    displays.exposure.textContent = Number(inputs.exposure.value).toFixed(2); // ✨
+                    displays.lightMultiplier.textContent = Number(inputs.lightMultiplier.value).toFixed(2) + "x"; // ✨
 
                     bloomPass.strength = Number(inputs.strength.value);
                     bloomPass.threshold = Number(inputs.threshold.value);
@@ -601,15 +653,17 @@
                     contrastPass.uniforms["contrast"].value = Number(inputs.contrast.value);
                     bounceLight.intensity = Number(inputs.lightInt.value);
                     ambientLight.intensity = Number(inputs.ambient.value);
+                    renderer.toneMappingExposure = Number(inputs.exposure.value); // ✨ 同步相机曝光
 
                     if (exrTexture) {
                         scene.background = inputs.exrToggle.checked ? exrTexture : new THREE.Color(0x000000);
                     }
 
                     if (groundReflector) { 
+                        groundReflector.visible = inputs.reflectorToggle.checked;
                         groundReflector.position.y = baseReflectorY + Number(inputs.reflectorY.value);
-                        groundReflector.material.uniforms.blurSize.value = Number(inputs.reflectorBlur.value) * 0.005; // 新增同步
-                        groundReflector.material.uniforms.intensity.value = Number(inputs.reflectorIntensity.value); // 新增亮度同步
+                        groundReflector.material.uniforms.blurSize.value = Number(inputs.reflectorBlur.value) * 0.005; 
+                        groundReflector.material.uniforms.intensity.value = Number(inputs.reflectorIntensity.value); 
                     }
 
                     alert("🎉 配置文件导入并应用成功！");
@@ -626,10 +680,17 @@
             controls.update();
             if (currentModel) {
                 const userMultiplier = Number(inputs.multiplier.value);
+                const userLightMultiplier = Number(inputs.lightMultiplier.value); // ✨ 获取灯光滑块值
+
                 currentModel.traverse((node) => {
+                    // 处理发光材质
                     if (node.isMesh && node.userData.baseEmissiveIntensity !== undefined) {
                         const mats = Array.isArray(node.material) ? node.material : [node.material];
                         mats.forEach(mat => { mat.emissiveIntensity = node.userData.baseEmissiveIntensity * userMultiplier; });
+                    }
+                    // ✨ 处理物理光源
+                    if (node.isLight && node.userData.baseIntensity !== undefined) {
+                        node.intensity = node.userData.baseIntensity * userLightMultiplier;
                     }
                 });
             }

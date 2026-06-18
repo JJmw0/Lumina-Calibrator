@@ -54,6 +54,24 @@
         input[type="number"].value-display::-webkit-outer-spin-button,
         input[type="number"].value-display::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 
+        /* ✨ 新增：已选文件展示及悬浮删除按钮样式 */
+        .selected-file-container {
+            display: none; width: 100%; color: #00e5ff; font-size: 11px; background: rgba(0, 119, 182, 0.15); 
+            padding: 8px 10px; border-radius: 6px; border: 1px solid #0077b6; 
+            justify-content: space-between; align-items: center;
+        }
+        .selected-file-container.active { display: flex; }
+        .selected-file-container .file-name {
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 85%;
+        }
+        .selected-file-container .delete-btn {
+            color: #ff4d4d; cursor: pointer; font-size: 12px; font-weight: bold;
+            opacity: 0; transition: opacity 0.2s; padding: 0 4px; user-select: none;
+        }
+        .selected-file-container:hover .delete-btn {
+            opacity: 1;
+        }
+
         /* Switch 样式 */
         .switch { position: relative; display: inline-block; width: 34px; height: 18px; }
         .switch input { opacity: 0; width: 0; height: 0; }
@@ -115,11 +133,21 @@
         <div class="file-upload-wrapper">
             <label>1. 加载模型 Load Model (.glb, .gltf)</label>
             <input type="file" id="file-input" accept=".glb, .gltf">
+            <!-- ✨ 新增：模型自定义显示容器与删除按钮 -->
+            <div class="selected-file-container" id="model-file-container">
+                <span class="file-name" id="model-file-name"></span>
+                <span class="delete-btn" id="model-delete-btn" title="删除模型 Remove Model">✖</span>
+            </div>
         </div>
         
         <div class="file-upload-wrapper">
             <label>2. 加载环境光贴图 Load HDRI (.exr)</label>
             <input type="file" id="exr-input" accept=".exr">
+            <!-- ✨ 新增：EXR自定义显示容器与删除按钮 -->
+            <div class="selected-file-container" id="exr-file-container">
+                <span class="file-name" id="exr-file-name"></span>
+                <span class="delete-btn" id="exr-delete-btn" title="删除环境光 Remove HDRI">✖</span>
+            </div>
         </div>
 
         <div class="control-group" style="flex-direction: row; justify-content: space-between; align-items: center; margin-top: 8px;">
@@ -201,56 +229,6 @@
         <div class="control-group">
             <div class="control-label"><span>辉光扩散半径 (Radius):</span><input type="number" id="radius-val" class="value-display" step="0.01" value="0.40"></div>
             <input type="range" id="bloom-radius" min="0" max="2" step="0.01" value="0.40">
-        </div>
-
-        <div class="divider"></div>
-
-        <!-- ✨ 新增：全局曝光度控制（用于修复灯光物理单位过曝死白） -->
-        <div class="control-group">
-            <div class="control-label"><span style="color:#f72585;">相机曝光度 (Exposure):</span><span id="exposure-val" class="value-display" style="color:#f72585;">1.00</span></div>
-            <input type="range" id="exposure-slider" min="0.01" max="3.0" step="0.01" value="1.00" style="accent-color: #f72585;">
-        </div>
-
-        <div class="control-group">
-            <div class="control-label"><span>模型原生发光倍数 (Emission Multiplier):</span><span id="multiplier-val" class="value-display">1.0x</span></div>
-            <input type="range" id="emission-multiplier" min="0.1" max="5" step="0.1" value="1.0">
-        </div>
-
-        <!-- ✨ 新增：内置物理灯光衰减器（直接控制点光源/聚光灯） -->
-        <div class="control-group">
-            <div class="control-label"><span>内置灯光倍数 (GLB Lights):</span><span id="light-multiplier-val" class="value-display">1.00x</span></div>
-            <input type="range" id="light-multiplier-slider" min="0.00" max="2.00" step="0.01" value="1.00">
-        </div>
-
-        <div class="divider"></div>
-
-        <div class="control-group">
-            <div class="control-label"><span style="color:#00ff88;">地面反射光晕 (Bounce):</span><span id="light-int-val" class="value-display" style="color:#00ff88;">5.0</span></div>
-            <input type="range" id="light-intensity" min="0" max="20" step="0.1" value="5.0" style="accent-color: #00ff88;">
-        </div>
-        <div class="control-group">
-            <div class="control-label"><span style="color:#00ff88;">暗部环境能见度 (Ambient):</span><span id="ambient-val" class="value-display" style="color:#00ff88;">0.2</span></div>
-            <input type="range" id="ambient-intensity" min="0" max="2" step="0.1" value="0.2" style="accent-color: #00ff88;">
-        </div>
-
-        <div class="divider"></div>
-
-        <div class="control-group">
-            <div class="control-label"><span>画面对比度 (Contrast):</span><span id="contrast-val" class="value-display">1.00</span></div>
-            <input type="range" id="contrast-slider" min="0.5" max="2.0" step="0.01" value="1.00">
-        </div>
-
-        <div class="control-group">
-            <div class="control-label"><span>辉光溢出强度 (Bloom):</span><span id="strength-val" class="value-display">0.20</span></div>
-            <input type="range" id="bloom-strength" min="0" max="2" step="0.05" value="0.20">
-        </div>
-        <div class="control-group">
-            <div class="control-label"><span>辉光截断阈值 (Threshold):</span><span id="threshold-val" class="value-display">0.6</span></div>
-            <input type="range" id="bloom-threshold" min="0" max="2" step="0.1" value="0.6">
-        </div>
-        <div class="control-group">
-            <div class="control-label"><span>辉光扩散半径 (Radius):</span><span id="radius-val" class="value-display">0.4</span></div>
-            <input type="range" id="bloom-radius" min="0" max="2" step="0.1" value="0.4">
         </div>
 
         <div class="divider"></div>
@@ -413,6 +391,11 @@
             const file = event.target.files[0];
             if (!file) return;
 
+            // ✨ 新增：更新UI，隐藏原生input，展示自定义名称容器
+            document.getElementById('file-input').style.display = 'none';
+            document.getElementById('model-file-name').textContent = file.name;
+            document.getElementById('model-file-container').classList.add('active');
+
             const url = URL.createObjectURL(file);
             
             showProgress("⚡ 正在解析并构建三维模型资产 Loading...");
@@ -519,10 +502,32 @@
             });
         });
 
+        // ✨ 新增：删除当前模型与地面反射的逻辑
+        document.getElementById('model-delete-btn').addEventListener('click', function() {
+            if (currentModel) {
+                scene.remove(currentModel);
+                currentModel = null;
+            }
+            if (groundReflector) {
+                scene.remove(groundReflector);
+                groundReflector.dispose();
+                groundReflector = null;
+            }
+            // 恢复 UI 到未选择状态
+            document.getElementById('file-input').value = '';
+            document.getElementById('file-input').style.display = 'block';
+            document.getElementById('model-file-container').classList.remove('active');
+        });
+
         // 2. 加载 EXR 贴图
         document.getElementById('exr-input').addEventListener('change', function(event) {
             const file = event.target.files[0];
             if (!file) return;
+
+            // ✨ 新增：更新UI，隐藏原生input，展示自定义名称容器
+            document.getElementById('exr-input').style.display = 'none';
+            document.getElementById('exr-file-name').textContent = file.name;
+            document.getElementById('exr-file-container').classList.add('active');
 
             const url = URL.createObjectURL(file);
             
@@ -543,6 +548,18 @@
                 hideProgress();
                 alert("❌ EXR 读取失败。");
             });
+        });
+
+        // ✨ 新增：删除当前环境光贴图的逻辑
+        document.getElementById('exr-delete-btn').addEventListener('click', function() {
+            scene.environment = null;
+            scene.background = new THREE.Color(0x000000);
+            exrTexture = null;
+            
+            // 恢复 UI 到未选择状态
+            document.getElementById('exr-input').value = '';
+            document.getElementById('exr-input').style.display = 'block';
+            document.getElementById('exr-file-container').classList.remove('active');
         });
 
         // 3. EXR 背景可见性 开关

@@ -460,19 +460,22 @@
                     varying vec4 vUv;
                     void main() {
                         vec4 base = vec4(0.0);
-                        vec4 uv;
                         
-                        uv = vUv; uv.x -= blurSize * vUv.w; uv.y -= blurSize * vUv.w; base += texture2DProj(tDiffuse, uv) * 0.0625;
-                        uv = vUv;                           uv.y -= blurSize * vUv.w; base += texture2DProj(tDiffuse, uv) * 0.125;
-                        uv = vUv; uv.x += blurSize * vUv.w; uv.y -= blurSize * vUv.w; base += texture2DProj(tDiffuse, uv) * 0.0625;
-                        
-                        uv = vUv; uv.x -= blurSize * vUv.w;                           base += texture2DProj(tDiffuse, uv) * 0.125;
-                        uv = vUv;                                                     base += texture2DProj(tDiffuse, uv) * 0.25;
-                        uv = vUv; uv.x += blurSize * vUv.w;                           base += texture2DProj(tDiffuse, uv) * 0.125;
-                        
-                        uv = vUv; uv.x -= blurSize * vUv.w; uv.y += blurSize * vUv.w; base += texture2DProj(tDiffuse, uv) * 0.0625;
-                        uv = vUv;                           uv.y += blurSize * vUv.w; base += texture2DProj(tDiffuse, uv) * 0.125;
-                        uv = vUv; uv.x += blurSize * vUv.w; uv.y += blurSize * vUv.w; base += texture2DProj(tDiffuse, uv) * 0.0625;
+                        // ✨ 核心修复：采用 Vogel Disk (黄金螺旋) 算法进行 48 次高密度有机采样
+                        // 彻底消除之前 3x3 矩阵采样导致的高光重影（9个圆点）现象，完美模拟微表面磨砂质感
+                        for(int i = 0; i < 48; i++) {
+                            float f_i = float(i);
+                            float r = sqrt(f_i + 0.5) / sqrt(48.0);
+                            float theta = f_i * 2.39996323; // 黄金角 (Golden Angle)
+                            vec2 offset = vec2(cos(theta), sin(theta)) * r;
+                            
+                            vec4 uv = vUv;
+                            uv.x += offset.x * blurSize * vUv.w;
+                            uv.y += offset.y * blurSize * vUv.w;
+                            
+                            base += texture2DProj(tDiffuse, uv);
+                        }
+                        base /= 48.0;
                         
                         gl_FragColor = vec4( base.rgb * color * intensity, 1.0 );
                         #include <tonemapping_fragment>

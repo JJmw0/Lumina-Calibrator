@@ -22,7 +22,21 @@
             color: #e0f7fa; padding: 24px; border-radius: 12px; border: 1px solid #005f73;
             box-shadow: 0 8px 32px rgba(0, 229, 255, 0.15); backdrop-filter: blur(8px); z-index: 100; width: 320px;
             max-height: 90vh; overflow-y: auto;
+            transition: opacity 0.3s ease, padding 0.3s ease;
         }
+
+        #ui-container.minimized {
+            padding: 16px 24px;
+            overflow: hidden;
+            height: auto;
+        }
+        #ui-container.minimized #ui-content {
+            display: none;
+        }
+        #ui-container.minimized:not(:hover) {
+            opacity: 0.20;
+        }
+
         #ui-container::-webkit-scrollbar { width: 6px; }
         #ui-container::-webkit-scrollbar-track { background: transparent; }
         #ui-container::-webkit-scrollbar-thumb { background: rgba(0, 229, 255, 0.3); border-radius: 3px; }
@@ -41,7 +55,6 @@
         .divider { border-top: 1px solid rgba(0, 119, 182, 0.3); margin: 18px 0; }
         .status-box { font-size: 11px; color: #52b788; margin-top: 15px; background: rgba(82, 183, 136, 0.08); padding: 8px; border-radius: 4px; border: 1px solid rgba(82, 183, 136, 0.2); line-height: 1.4; }
 
-        /* 新增：手动输入框样式 */
         input[type="number"].value-display {
             background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(0, 229, 255, 0.3);
             border-radius: 4px; width: 55px; text-align: center; outline: none;
@@ -54,7 +67,6 @@
         input[type="number"].value-display::-webkit-outer-spin-button,
         input[type="number"].value-display::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 
-        /* ✨ 新增：已选文件展示及悬浮删除按钮样式 */
         .selected-file-container {
             display: none; width: 100%; color: #00e5ff; font-size: 11px; background: rgba(0, 119, 182, 0.15); 
             padding: 8px 10px; border-radius: 6px; border: 1px solid #0077b6; 
@@ -72,7 +84,6 @@
             opacity: 1;
         }
 
-        /* Switch 样式 */
         .switch { position: relative; display: inline-block; width: 34px; height: 18px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #14213d; transition: .4s; border-radius: 18px; border: 1px solid #005f73; }
@@ -80,7 +91,6 @@
         input:checked + .slider { background-color: #0077b6; border-color: #00e5ff; }
         input:checked + .slider:before { transform: translateX(16px); background-color: #00e5ff; }
 
-        /* Button 样式 */
         .action-btn {
             width: 100%; background: #0077b6; border: 1px solid #005f73; color: #e0f7fa;
             padding: 10px; border-radius: 6px; font-size: 12px; cursor: pointer;
@@ -90,7 +100,6 @@
         .action-btn.secondary { background: rgba(0, 119, 182, 0.15); }
         .action-btn.secondary:hover { background: rgba(0, 119, 182, 0.4); }
 
-        /* 🚨 全局加载进度条遮罩层样式 */
         #loading-overlay {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(5, 8, 15, 0.85); z-index: 999;
@@ -127,125 +136,128 @@
     </div>
 
     <div id="ui-container">
-        <h3>⚡ Lumina Calibrator</h3>
-        <div class="sub-title">Supports one-click export and import of the entire environment, configuration, and codebase.</div>
-        
-        <div class="file-upload-wrapper">
-            <label>1. 加载模型 Load Model (.glb, .gltf)</label>
-            <input type="file" id="file-input" accept=".glb, .gltf">
-            <!-- ✨ 新增：模型自定义显示容器与删除按钮 -->
-            <div class="selected-file-container" id="model-file-container">
-                <span class="file-name" id="model-file-name"></span>
-                <span class="delete-btn" id="model-delete-btn" title="删除模型 Remove Model">✖</span>
-            </div>
+        <div class="ui-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <h3 style="margin: 0;">⚡ Lumina Calibrator</h3>
+            <span id="minimize-btn" style="cursor: pointer; color: #00e5ff; font-size: 20px; font-weight: bold; line-height: 1; padding: 0 5px;" title="最小化/展开面板 (Minimize/Restore)">−</span>
         </div>
         
-        <div class="file-upload-wrapper">
-            <label>2. 加载环境光贴图 Load HDRI (.exr)</label>
-            <input type="file" id="exr-input" accept=".exr">
-            <!-- ✨ 新增：EXR自定义显示容器与删除按钮 -->
-            <div class="selected-file-container" id="exr-file-container">
-                <span class="file-name" id="exr-file-name"></span>
-                <span class="delete-btn" id="exr-delete-btn" title="删除环境光 Remove HDRI">✖</span>
+        <div id="ui-content">
+            <div class="sub-title">Supports one-click export and import of the entire environment, configuration, and codebase.</div>
+            
+            <div class="file-upload-wrapper">
+                <label>1. 加载模型 Load Model (.glb, .gltf)</label>
+                <!-- 修复了丢失的节点 -->
+                <input type="file" id="file-input" accept=".glb, .gltf">
+                <div class="selected-file-container" id="model-file-container">
+                    <span class="file-name" id="model-file-name"></span>
+                    <span class="delete-btn" id="model-delete-btn" title="删除模型 Remove Model">✖</span>
+                </div>
             </div>
-        </div>
+        
+            <div class="file-upload-wrapper">
+                <label>2. 加载环境光贴图 Load HDRI (.exr)</label>
+                <input type="file" id="exr-input" accept=".exr">
+                <div class="selected-file-container" id="exr-file-container">
+                    <span class="file-name" id="exr-file-name"></span>
+                    <span class="delete-btn" id="exr-delete-btn" title="删除环境光 Remove HDRI">✖</span>
+                </div>
+            </div>
 
-        <div class="control-group" style="flex-direction: row; justify-content: space-between; align-items: center; margin-top: 8px;">
-            <div style="color: #90e0ef; font-size: 12px;">EXR 背景对摄像机可见 Show EXR Background to Camera</div>
-            <label class="switch">
-                <input type="checkbox" id="exr-visible-toggle">
-                <span class="slider"></span>
-            </label>
-        </div>
+            <div class="control-group" style="flex-direction: row; justify-content: space-between; align-items: center; margin-top: 8px;">
+                <div style="color: #90e0ef; font-size: 12px;">EXR 背景对摄像机可见 Show EXR Background to Camera</div>
+                <label class="switch">
+                    <input type="checkbox" id="exr-visible-toggle">
+                    <span class="slider"></span>
+                </label>
+            </div>
 
-        <div class="divider"></div>
+            <div class="divider"></div>
 
-        <div class="control-group" style="flex-direction: row; justify-content: space-between; align-items: center;">
-            <div style="color: #ffb703; font-size: 12px; font-weight: bold;">✨ 开启地面镜面倒影 (Reflector)</div>
-            <label class="switch">
-                <input type="checkbox" id="reflector-toggle" checked>
-                <span class="slider"></span>
-            </label>
-        </div>
+            <div class="control-group" style="flex-direction: row; justify-content: space-between; align-items: center;">
+                <div style="color: #ffb703; font-size: 12px; font-weight: bold;">✨ 开启地面镜面倒影 (Reflector)</div>
+                <label class="switch">
+                    <input type="checkbox" id="reflector-toggle" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
 
-        <div class="control-group">
-            <div class="control-label"><span style="color:#ffb703;">地面反射高度 (Y-Offset):</span><input type="number" id="reflector-y-val" class="value-display" style="color:#ffb703;" step="0.01" value="0.00"></div>
-            <input type="range" id="reflector-y-slider" min="-2.0" max="2.0" step="0.01" value="0.00" style="accent-color: #ffb703;">
-        </div>
-        <div class="control-group">
-            <div class="control-label"><span style="color:#ffb703;">反射模糊度 (Blur):</span><input type="number" id="reflector-blur-val" class="value-display" style="color:#ffb703;" step="0.01" value="0.50"></div>
-            <input type="range" id="reflector-blur-slider" min="0.0" max="10.0" step="0.01" value="0.50" style="accent-color: #ffb703;">
-        </div>
-        <div class="control-group">
-            <div class="control-label"><span style="color:#ffb703;">倒影亮度 (Intensity):</span><input type="number" id="reflector-intensity-val" class="value-display" style="color:#ffb703;" step="0.01" value="1.00"></div>
-            <input type="range" id="reflector-intensity-slider" min="0.0" max="10.0" step="0.01" value="1.00" style="accent-color: #ffb703;">
-        </div>
+            <div class="control-group">
+                <div class="control-label"><span style="color:#ffb703;">地面反射高度 (Y-Offset):</span><input type="number" id="reflector-y-val" class="value-display" style="color:#ffb703;" step="0.01" value="0.00"></div>
+                <input type="range" id="reflector-y-slider" min="-2.0" max="2.0" step="0.01" value="0.00" style="accent-color: #ffb703;">
+            </div>
+            <div class="control-group">
+                <div class="control-label"><span style="color:#ffb703;">反射模糊度 (Blur):</span><input type="number" id="reflector-blur-val" class="value-display" style="color:#ffb703;" step="0.01" value="0.50"></div>
+                <input type="range" id="reflector-blur-slider" min="0.0" max="10.0" step="0.01" value="0.50" style="accent-color: #ffb703;">
+            </div>
+            <div class="control-group">
+                <div class="control-label"><span style="color:#ffb703;">倒影亮度 (Intensity):</span><input type="number" id="reflector-intensity-val" class="value-display" style="color:#ffb703;" step="0.01" value="1.00"></div>
+                <input type="range" id="reflector-intensity-slider" min="0.0" max="10.0" step="0.01" value="1.00" style="accent-color: #ffb703;">
+            </div>
 
-        <div class="divider"></div>
+            <div class="divider"></div>
 
-        <!-- ✨ 新增：全局曝光度控制（用于修复灯光物理单位过曝死白） -->
-        <div class="control-group">
-            <div class="control-label"><span style="color:#f72585;">相机曝光度 (Exposure):</span><input type="number" id="exposure-val" class="value-display" style="color:#f72585;" step="0.01" value="1.00"></div>
-            <input type="range" id="exposure-slider" min="0.01" max="3.0" step="0.01" value="1.00" style="accent-color: #f72585;">
-        </div>
+            <div class="control-group">
+                <div class="control-label"><span style="color:#f72585;">相机曝光度 (Exposure):</span><input type="number" id="exposure-val" class="value-display" style="color:#f72585;" step="0.01" value="1.00"></div>
+                <input type="range" id="exposure-slider" min="0.01" max="3.0" step="0.01" value="1.00" style="accent-color: #f72585;">
+            </div>
 
-        <div class="control-group">
-            <div class="control-label"><span>模型原生发光倍数 (Emission Multiplier):</span><input type="number" id="multiplier-val" class="value-display" step="0.01" value="1.00"></div>
-            <input type="range" id="emission-multiplier" min="0.1" max="5" step="0.01" value="1.00">
-        </div>
+            <div class="control-group">
+                <div class="control-label"><span>模型原生发光倍数 (Emission Multiplier):</span><input type="number" id="multiplier-val" class="value-display" step="0.01" value="1.00"></div>
+                <input type="range" id="emission-multiplier" min="0.1" max="5" step="0.01" value="1.00">
+            </div>
 
-        <!-- ✨ 新增：内置物理灯光衰减器（直接控制点光源/聚光灯） -->
-        <div class="control-group">
-            <div class="control-label"><span>内置灯光倍数 (GLB Lights):</span><input type="number" id="light-multiplier-val" class="value-display" step="0.01" value="1.00"></div>
-            <input type="range" id="light-multiplier-slider" min="0.00" max="2.00" step="0.01" value="1.00">
-        </div>
+            <div class="control-group">
+                <div class="control-label"><span>内置灯光倍数 (GLB Lights):</span><input type="number" id="light-multiplier-val" class="value-display" step="0.01" value="1.00"></div>
+                <input type="range" id="light-multiplier-slider" min="0.00" max="2.00" step="0.01" value="1.00">
+            </div>
 
-        <div class="divider"></div>
+            <div class="divider"></div>
 
-        <div class="control-group">
-            <div class="control-label"><span style="color:#00ff88;">地面反射光晕 (Bounce):</span><input type="number" id="light-int-val" class="value-display" style="color:#00ff88;" step="0.01" value="5.00"></div>
-            <input type="range" id="light-intensity" min="0" max="20" step="0.01" value="5.00" style="accent-color: #00ff88;">
-        </div>
-        <div class="control-group">
-            <div class="control-label"><span style="color:#00ff88;">暗部环境能见度 (Ambient):</span><input type="number" id="ambient-val" class="value-display" style="color:#00ff88;" step="0.01" value="0.20"></div>
-            <input type="range" id="ambient-intensity" min="0" max="2" step="0.01" value="0.20" style="accent-color: #00ff88;">
-        </div>
+            <div class="control-group">
+                <div class="control-label"><span style="color:#00ff88;">地面反射光晕 (Bounce):</span><input type="number" id="light-int-val" class="value-display" style="color:#00ff88;" step="0.01" value="5.00"></div>
+                <input type="range" id="light-intensity" min="0" max="20" step="0.01" value="5.00" style="accent-color: #00ff88;">
+            </div>
+            <div class="control-group">
+                <div class="control-label"><span style="color:#00ff88;">暗部环境能见度 (Ambient):</span><input type="number" id="ambient-val" class="value-display" style="color:#00ff88;" step="0.01" value="0.20"></div>
+                <input type="range" id="ambient-intensity" min="0" max="2" step="0.01" value="0.20" style="accent-color: #00ff88;">
+            </div>
 
-        <div class="divider"></div>
+            <div class="divider"></div>
 
-        <div class="control-group">
-            <div class="control-label"><span>画面对比度 (Contrast):</span><input type="number" id="contrast-val" class="value-display" step="0.01" value="1.00"></div>
-            <input type="range" id="contrast-slider" min="0.5" max="2.0" step="0.01" value="1.00">
-        </div>
+            <div class="control-group">
+                <div class="control-label"><span>画面对比度 (Contrast):</span><input type="number" id="contrast-val" class="value-display" step="0.01" value="1.00"></div>
+                <input type="range" id="contrast-slider" min="0.5" max="2.0" step="0.01" value="1.00">
+            </div>
 
-        <div class="control-group">
-            <div class="control-label"><span>辉光溢出强度 (Bloom):</span><input type="number" id="strength-val" class="value-display" step="0.01" value="0.20"></div>
-            <input type="range" id="bloom-strength" min="0" max="2" step="0.01" value="0.20">
-        </div>
-        <div class="control-group">
-            <div class="control-label"><span>辉光截断阈值 (Threshold):</span><input type="number" id="threshold-val" class="value-display" step="0.01" value="0.60"></div>
-            <input type="range" id="bloom-threshold" min="0" max="2" step="0.01" value="0.60">
-        </div>
-        <div class="control-group">
-            <div class="control-label"><span>辉光扩散半径 (Radius):</span><input type="number" id="radius-val" class="value-display" step="0.01" value="0.40"></div>
-            <input type="range" id="bloom-radius" min="0" max="2" step="0.01" value="0.40">
-        </div>
+            <div class="control-group">
+                <div class="control-label"><span>辉光溢出强度 (Bloom):</span><input type="number" id="strength-val" class="value-display" step="0.01" value="0.20"></div>
+                <input type="range" id="bloom-strength" min="0" max="2" step="0.01" value="0.20">
+            </div>
+            <div class="control-group">
+                <div class="control-label"><span>辉光截断阈值 (Threshold):</span><input type="number" id="threshold-val" class="value-display" step="0.01" value="0.60"></div>
+                <input type="range" id="bloom-threshold" min="0" max="2" step="0.01" value="0.60">
+            </div>
+            <div class="control-group">
+                <div class="control-label"><span>辉光扩散半径 (Radius):</span><input type="number" id="radius-val" class="value-display" step="0.01" value="0.40"></div>
+                <input type="range" id="bloom-radius" min="0" max="2" step="0.01" value="0.40">
+            </div>
 
-        <div class="divider"></div>
+            <div class="divider"></div>
 
-        <div class="control-group">
-            <button id="export-code-btn" class="action-btn">📤 导出当前完整代码 (Export Current Code) (.js)</button>
-        </div>
-        <div class="control-group" style="flex-direction: row; gap: 8px; margin-top: 8px;">
-            <button id="export-params-btn" class="action-btn secondary">💾 导出参数 (Export Parameters) (JSON)</button>
-            <button id="import-params-btn" class="action-btn secondary">📂 导入参数 (Import Parameters)</button>
-        </div>
-        <input type="file" id="param-import-input" accept=".json" style="display:none;">
+            <div class="control-group">
+                <button id="export-code-btn" class="action-btn">📤 导出当前完整代码 (Export Current Code) (.js)</button>
+            </div>
+            <div class="control-group" style="flex-direction: row; gap: 8px; margin-top: 8px;">
+                <button id="export-params-btn" class="action-btn secondary">💾 导出参数 (Export Parameters) (JSON)</button>
+                <button id="import-params-btn" class="action-btn secondary">📂 导入参数 (Import Parameters)</button>
+            </div>
+            <input type="file" id="param-import-input" accept=".json" style="display:none;">
 
-        <div class="status-box">
-           Enjoy.<br>
-            :)
-        </div>
+            <div class="status-box">
+               Enjoy.<br>
+                :)
+            </div>
+        </div> 
     </div>
 
     <script type="module">
@@ -258,10 +270,8 @@
         import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
         import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
         import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
-        // 🚨 引入官方平面反射组件
         import { Reflector } from 'three/addons/objects/Reflector.js';
 
-        // 自定义对比度着色器
         const ContrastShader = {
             uniforms: {
                 "tDiffuse": { value: null },
@@ -274,7 +284,6 @@
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x000000); 
 
-        // DOM 元素引用
         const inputs = {
             multiplier: document.getElementById('emission-multiplier'),
             lightInt: document.getElementById('light-intensity'),
@@ -288,8 +297,8 @@
             reflectorY: document.getElementById('reflector-y-slider'),
             reflectorBlur: document.getElementById('reflector-blur-slider'), 
             reflectorIntensity: document.getElementById('reflector-intensity-slider'), 
-            exposure: document.getElementById('exposure-slider'), // ✨ 新增曝光输入
-            lightMultiplier: document.getElementById('light-multiplier-slider') // ✨ 新增物理灯光输入
+            exposure: document.getElementById('exposure-slider'),
+            lightMultiplier: document.getElementById('light-multiplier-slider')
         };
         const displays = {
             multiplier: document.getElementById('multiplier-val'),
@@ -302,17 +311,31 @@
             reflectorY: document.getElementById('reflector-y-val'),
             reflectorBlur: document.getElementById('reflector-blur-val'), 
             reflectorIntensity: document.getElementById('reflector-intensity-val'), 
-            exposure: document.getElementById('exposure-val'), // ✨ 新增曝光显示
-            lightMultiplier: document.getElementById('light-multiplier-val') // ✨ 新增物理灯光显示
+            exposure: document.getElementById('exposure-val'),
+            lightMultiplier: document.getElementById('light-multiplier-val')
         };
 
-        // 进度条 DOM 节点引用
         const overlay = document.getElementById('loading-overlay');
         const titleText = document.getElementById('loading-title-text');
         const progressBar = document.getElementById('main-progress-bar');
         const progressText = document.getElementById('main-progress-text');
 
-        // 核心补光与后期组件
+        const uiContainer = document.getElementById('ui-container');
+        const minimizeBtn = document.getElementById('minimize-btn');
+        let isMinimized = uiContainer.classList.contains('minimized');
+        minimizeBtn.textContent = isMinimized ? '＋' : '−';
+
+        minimizeBtn.addEventListener('click', () => {
+            isMinimized = !isMinimized;
+            if (isMinimized) {
+                uiContainer.classList.add('minimized');
+                minimizeBtn.textContent = '＋';
+            } else {
+                uiContainer.classList.remove('minimized');
+                minimizeBtn.textContent = '−';
+            }
+        });
+
         const ambientLight = new THREE.AmbientLight(0xffffff, Number(inputs.ambient.value));
         scene.add(ambientLight);
 
@@ -329,7 +352,7 @@
         
         renderer.outputColorSpace = THREE.SRGBColorSpace; 
         renderer.toneMapping = THREE.AgXToneMapping; 
-        renderer.toneMappingExposure = Number(inputs.exposure.value); // 初始化使用滑块值
+        renderer.toneMappingExposure = Number(inputs.exposure.value);
         
         const canvasContainer = document.getElementById('canvas-container');
         canvasContainer.innerHTML = '';
@@ -386,12 +409,10 @@
             overlay.classList.remove('active');
         }
 
-        // 1. 加载 GLB 模型
         document.getElementById('file-input').addEventListener('change', function(event) {
             const file = event.target.files[0];
             if (!file) return;
 
-            // ✨ 新增：更新UI，隐藏原生input，展示自定义名称容器
             document.getElementById('file-input').style.display = 'none';
             document.getElementById('model-file-name').textContent = file.name;
             document.getElementById('model-file-container').classList.add('active');
@@ -413,7 +434,6 @@
                             }
                         });
                     }
-                    // ✨ 抓取 GLB 原生包含的物理灯光 (PointLight, SpotLight 等)
                     if (node.isLight) {
                         node.userData.baseIntensity = node.intensity;
                     }
@@ -461,12 +481,10 @@
                     void main() {
                         vec4 base = vec4(0.0);
                         
-                        // ✨ 核心修复：采用 Vogel Disk (黄金螺旋) 算法进行 48 次高密度有机采样
-                        // 彻底消除之前 3x3 矩阵采样导致的高光重影（9个圆点）现象，完美模拟微表面磨砂质感
                         for(int i = 0; i < 48; i++) {
                             float f_i = float(i);
                             float r = sqrt(f_i + 0.5) / sqrt(48.0);
-                            float theta = f_i * 2.39996323; // 黄金角 (Golden Angle)
+                            float theta = f_i * 2.39996323; 
                             vec2 offset = vec2(cos(theta), sin(theta)) * r;
                             
                             vec4 uv = vUv;
@@ -505,7 +523,6 @@
             });
         });
 
-        // ✨ 新增：删除当前模型与地面反射的逻辑
         document.getElementById('model-delete-btn').addEventListener('click', function() {
             if (currentModel) {
                 scene.remove(currentModel);
@@ -516,18 +533,15 @@
                 groundReflector.dispose();
                 groundReflector = null;
             }
-            // 恢复 UI 到未选择状态
             document.getElementById('file-input').value = '';
             document.getElementById('file-input').style.display = 'block';
             document.getElementById('model-file-container').classList.remove('active');
         });
 
-        // 2. 加载 EXR 贴图
         document.getElementById('exr-input').addEventListener('change', function(event) {
             const file = event.target.files[0];
             if (!file) return;
 
-            // ✨ 新增：更新UI，隐藏原生input，展示自定义名称容器
             document.getElementById('exr-input').style.display = 'none';
             document.getElementById('exr-file-name').textContent = file.name;
             document.getElementById('exr-file-container').classList.add('active');
@@ -553,26 +567,22 @@
             });
         });
 
-        // ✨ 新增：删除当前环境光贴图的逻辑
         document.getElementById('exr-delete-btn').addEventListener('click', function() {
             scene.environment = null;
             scene.background = new THREE.Color(0x000000);
             exrTexture = null;
             
-            // 恢复 UI 到未选择状态
             document.getElementById('exr-input').value = '';
             document.getElementById('exr-input').style.display = 'block';
             document.getElementById('exr-file-container').classList.remove('active');
         });
 
-        // 3. EXR 背景可见性 开关
         inputs.exrToggle.addEventListener('change', function(e) {
             if (exrTexture) {
                 scene.background = e.target.checked ? exrTexture : new THREE.Color(0x000000);
             }
         });
 
-        // 🚨 地面反射交互
         inputs.reflectorToggle.addEventListener('change', function(e) {
             if (groundReflector) {
                 groundReflector.visible = e.target.checked;
@@ -603,18 +613,16 @@
             }
         });
 
-        // ✨ 曝光度与物理灯光调节
         inputs.exposure.addEventListener('input', (e) => {
             const val = Number(e.target.value);
             displays.exposure.value = val.toFixed(2);
-            renderer.toneMappingExposure = val; // 实时同步相机曝光
+            renderer.toneMappingExposure = val; 
         });
 
         inputs.lightMultiplier.addEventListener('input', (e) => {
             displays.lightMultiplier.value = Number(e.target.value).toFixed(2);
         });
 
-        // 其他滑块交互逻辑
         inputs.multiplier.addEventListener('input', (e) => { displays.multiplier.value = Number(e.target.value).toFixed(2); });
         inputs.lightInt.addEventListener('input', (e) => { const val = Number(e.target.value); displays.lightInt.value = val.toFixed(2); bounceLight.intensity = val; });
         inputs.ambient.addEventListener('input', (e) => { const val = Number(e.target.value); displays.ambient.value = val.toFixed(2); ambientLight.intensity = val; });
@@ -623,13 +631,11 @@
         inputs.threshold.addEventListener('input', (e) => { const val = Number(e.target.value); displays.threshold.value = val.toFixed(2); bloomPass.threshold = val; });
         inputs.radius.addEventListener('input', (e) => { const val = Number(e.target.value); displays.radius.value = val.toFixed(2); bloomPass.radius = val; });
 
-        // ✨ 核心增强：双向绑定手动输入与 Shift 微调步进逻辑
         Object.keys(inputs).forEach(key => {
             const rangeInput = inputs[key];
             const numInput = displays[key];
 
             if (rangeInput && rangeInput.type === 'range' && numInput) {
-                // 手动输入数值并回传给滑块
                 numInput.addEventListener('change', (e) => {
                     let val = Number(e.target.value);
                     const min = Number(rangeInput.min);
@@ -642,7 +648,6 @@
                     rangeInput.dispatchEvent(new Event('input')); 
                 });
 
-                // 键盘步进：默认 0.1，Shift 0.01
                 rangeInput.addEventListener('keydown', (e) => {
                     if (['ArrowUp', 'ArrowRight', 'ArrowDown', 'ArrowLeft'].includes(e.key)) {
                         e.preventDefault();
@@ -659,11 +664,10 @@
                     }
                 });
 
-                // 鼠标滚轮步进：默认 0.1，Shift 0.01
                 rangeInput.addEventListener('wheel', (e) => {
                     e.preventDefault();
                     let stepSize = e.shiftKey ? 0.01 : 0.1;
-                    let dir = e.deltaY < 0 ? 1 : -1; // 滚轮向上放大，向下减小
+                    let dir = e.deltaY < 0 ? 1 : -1; 
                     let val = Number(rangeInput.value) + dir * stepSize;
                     const min = Number(rangeInput.min);
                     const max = Number(rangeInput.max);
@@ -676,9 +680,7 @@
             }
         });
 
-        // 4. 导出当前校准完的代码 (Export Current Code) (.js)
         document.getElementById('export-code-btn').addEventListener('click', function() {
-            // 💡 极限自查修复：使用自动遍历机制，彻底避免后续新增 UI 参数被遗漏
             Object.values(inputs).forEach(input => {
                 if (input.type === 'checkbox') {
                     if (input.checked) input.setAttribute('checked', 'checked');
@@ -700,15 +702,12 @@
             URL.revokeObjectURL(url);
         });
 
-        // 5. 导出参数 (JSON)
         document.getElementById('export-params-btn').addEventListener('click', function() {
             const configData = {};
-            // 💡 极限自查修复：动态遍历读取对象，100% 覆盖面板上的所有 14 个交互节点
             for (const key in inputs) {
                 configData[key] = inputs[key].type === 'checkbox' ? inputs[key].checked : inputs[key].value;
             }
             
-            // ✨ 额外彩蛋：把摄像机机位也一并保存，这才是完整的“环境记录”
             configData.cameraPosition = camera.position.toArray();
             configData.controlsTarget = controls.target.toArray();
 
@@ -721,7 +720,6 @@
             URL.revokeObjectURL(url);
         });
 
-        // 6. 导入参数 (JSON)
         const paramImportInput = document.getElementById('param-import-input');
         document.getElementById('import-params-btn').addEventListener('click', () => paramImportInput.click());
 
@@ -734,7 +732,6 @@
                 try {
                     const data = JSON.parse(e.target.result);
                     
-                    // 💡 极限自查修复：动态遍历覆盖，并利用 dispatchEvent 自动唤醒所有渲染管线更新
                     for (const key in data) {
                         if (inputs[key]) {
                             if (inputs[key].type === 'checkbox') {
@@ -742,13 +739,11 @@
                             } else {
                                 inputs[key].value = data[key];
                             }
-                            // 核心：强制模拟鼠标交互，触发面板 UI 的文字更新和底层 3D 渲染逻辑的同步
                             inputs[key].dispatchEvent(new Event('input'));
                             inputs[key].dispatchEvent(new Event('change'));
                         }
                     }
 
-                    // 恢复相机的完美机位
                     if (data.cameraPosition) camera.position.fromArray(data.cameraPosition);
                     if (data.controlsTarget) controls.target.fromArray(data.controlsTarget);
                     controls.update();
@@ -767,15 +762,13 @@
             controls.update();
             if (currentModel) {
                 const userMultiplier = Number(inputs.multiplier.value);
-                const userLightMultiplier = Number(inputs.lightMultiplier.value); // ✨ 获取灯光滑块值
+                const userLightMultiplier = Number(inputs.lightMultiplier.value); 
 
                 currentModel.traverse((node) => {
-                    // 处理发光材质
                     if (node.isMesh && node.userData.baseEmissiveIntensity !== undefined) {
                         const mats = Array.isArray(node.material) ? node.material : [node.material];
                         mats.forEach(mat => { mat.emissiveIntensity = node.userData.baseEmissiveIntensity * userMultiplier; });
                     }
-                    // ✨ 处理物理光源
                     if (node.isLight && node.userData.baseIntensity !== undefined) {
                         node.intensity = node.userData.baseIntensity * userLightMultiplier;
                     }

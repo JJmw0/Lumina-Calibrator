@@ -57,7 +57,7 @@
 
         input[type="number"].value-display {
             background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(0, 229, 255, 0.3);
-            border-radius: 4px; width: 55px; text-align: center; outline: none;
+            border-radius: 4px; width: 66px; text-align: center; outline: none;
             padding: 2px; font-size: 11px; transition: all 0.2s;
             -moz-appearance: textfield;
         }
@@ -126,7 +126,6 @@
 
     <div id="canvas-container"></div>
 
-    <!-- 🚨 进度条核心组件 DOM -->
     <div id="loading-overlay">
         <div id="loading-title-text" class="loading-title">⚡ 正在解析三维数据模型 Loading...</div>
         <div class="progress-container">
@@ -146,7 +145,6 @@
             
             <div class="file-upload-wrapper">
                 <label>1. 加载模型 Load Model (.glb, .gltf)</label>
-                <!-- 修复了丢失的节点 -->
                 <input type="file" id="file-input" accept=".glb, .gltf">
                 <div class="selected-file-container" id="model-file-container">
                     <span class="file-name" id="model-file-name"></span>
@@ -182,64 +180,64 @@
             </div>
 
             <div class="control-group">
-                <div class="control-label"><span style="color:#ffb703;">地面反射高度 (Y-Offset):</span><input type="number" id="reflector-y-val" class="value-display" style="color:#ffb703;" step="0.01" value="0.00"></div>
-                <input type="range" id="reflector-y-slider" min="-2.0" max="2.0" step="0.01" value="0.00" style="accent-color: #ffb703;">
+                <div class="control-label"><span style="color:#ffb703;">地面反射高度 (Y-Offset):</span><input type="number" id="reflector-y-val" class="value-display" style="color:#ffb703;" step="0.001" value="0.000"></div>
+                <input type="range" id="reflector-y-slider" min="-2.000" max="2.000" step="0.001" value="0.000" style="accent-color: #ffb703;">
             </div>
             <div class="control-group">
-                <div class="control-label"><span style="color:#ffb703;">反射模糊度 (Blur):</span><input type="number" id="reflector-blur-val" class="value-display" style="color:#ffb703;" step="0.01" value="0.50"></div>
-                <input type="range" id="reflector-blur-slider" min="0.0" max="10.0" step="0.01" value="0.50" style="accent-color: #ffb703;">
+                <div class="control-label"><span style="color:#ffb703;">反射模糊度 (Blur):</span><input type="number" id="reflector-blur-val" class="value-display" style="color:#ffb703;" step="0.001" value="0.500"></div>
+                <input type="range" id="reflector-blur-slider" min="0.000" max="10.000" step="0.001" value="0.500" style="accent-color: #ffb703;">
             </div>
             <div class="control-group">
-                <div class="control-label"><span style="color:#ffb703;">倒影亮度 (Intensity):</span><input type="number" id="reflector-intensity-val" class="value-display" style="color:#ffb703;" step="0.01" value="1.00"></div>
-                <input type="range" id="reflector-intensity-slider" min="0.0" max="10.0" step="0.01" value="1.00" style="accent-color: #ffb703;">
-            </div>
-
-            <div class="divider"></div>
-
-            <div class="control-group">
-                <div class="control-label"><span style="color:#f72585;">相机曝光度 (Exposure):</span><input type="number" id="exposure-val" class="value-display" style="color:#f72585;" step="0.01" value="1.00"></div>
-                <input type="range" id="exposure-slider" min="0.01" max="3.0" step="0.01" value="1.00" style="accent-color: #f72585;">
-            </div>
-
-            <div class="control-group">
-                <div class="control-label"><span>模型原生发光倍数 (Emission Multiplier):</span><input type="number" id="multiplier-val" class="value-display" step="0.01" value="1.00"></div>
-                <input type="range" id="emission-multiplier" min="0.1" max="10.00" step="0.01" value="1.00">
-            </div>
-
-            <div class="control-group">
-                <div class="control-label"><span>内置灯光倍数 (GLB Lights):</span><input type="number" id="light-multiplier-val" class="value-display" step="0.01" value="1.00"></div>
-                <input type="range" id="light-multiplier-slider" min="0.00" max="2.00" step="0.01" value="1.00">
+                <div class="control-label"><span style="color:#ffb703;">倒影亮度 (Intensity):</span><input type="number" id="reflector-intensity-val" class="value-display" style="color:#ffb703;" step="0.001" value="1.000"></div>
+                <input type="range" id="reflector-intensity-slider" min="0.000" max="10.000" step="0.001" value="1.000" style="accent-color: #ffb703;">
             </div>
 
             <div class="divider"></div>
 
             <div class="control-group">
-                <div class="control-label"><span style="color:#00ff88;">地面反射光晕 (Bounce):</span><input type="number" id="light-int-val" class="value-display" style="color:#00ff88;" step="0.01" value="5.00"></div>
-                <input type="range" id="light-intensity" min="0" max="20" step="0.01" value="5.00" style="accent-color: #00ff88;">
+                <div class="control-label"><span style="color:#f72585;">相机曝光度 (Exposure):</span><input type="number" id="exposure-val" class="value-display" style="color:#f72585;" step="0.001" value="1.000"></div>
+                <input type="range" id="exposure-slider" min="0.000" max="3.000" step="0.001" value="1.000" style="accent-color: #f72585;">
             </div>
+
             <div class="control-group">
-                <div class="control-label"><span style="color:#00ff88;">暗部环境能见度 (Ambient):</span><input type="number" id="ambient-val" class="value-display" style="color:#00ff88;" step="0.01" value="0.20"></div>
-                <input type="range" id="ambient-intensity" min="0" max="2" step="0.01" value="0.20" style="accent-color: #00ff88;">
+                <div class="control-label"><span>模型原生发光倍数 (Emission Multiplier):</span><input type="number" id="multiplier-val" class="value-display" step="0.001" value="1.000"></div>
+                <input type="range" id="emission-multiplier" min="0.000" max="10.000" step="0.001" value="1.000">
+            </div>
+
+            <div class="control-group">
+                <div class="control-label"><span>内置灯光倍数 (GLB Lights):</span><input type="number" id="light-multiplier-val" class="value-display" step="0.001" value="1.000"></div>
+                <input type="range" id="light-multiplier-slider" min="0.000" max="2.000" step="0.001" value="1.000">
             </div>
 
             <div class="divider"></div>
 
             <div class="control-group">
-                <div class="control-label"><span>画面对比度 (Contrast):</span><input type="number" id="contrast-val" class="value-display" step="0.01" value="1.00"></div>
-                <input type="range" id="contrast-slider" min="0.5" max="2.0" step="0.01" value="1.00">
+                <div class="control-label"><span style="color:#00ff88;">地面反射光晕 (Bounce):</span><input type="number" id="light-int-val" class="value-display" style="color:#00ff88;" step="0.001" value="5.000"></div>
+                <input type="range" id="light-intensity" min="0.000" max="20.000" step="0.001" value="5.000" style="accent-color: #00ff88;">
+            </div>
+            <div class="control-group">
+                <div class="control-label"><span style="color:#00ff88;">暗部环境能见度 (Ambient):</span><input type="number" id="ambient-val" class="value-display" style="color:#00ff88;" step="0.001" value="0.200"></div>
+                <input type="range" id="ambient-intensity" min="0.000" max="2.000" step="0.001" value="0.200" style="accent-color: #00ff88;">
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="control-group">
+                <div class="control-label"><span>画面对比度 (Contrast):</span><input type="number" id="contrast-val" class="value-display" step="0.001" value="1.000"></div>
+                <input type="range" id="contrast-slider" min="0.000" max="2.000" step="0.001" value="1.000">
             </div>
 
             <div class="control-group">
-                <div class="control-label"><span>辉光溢出强度 (Bloom):</span><input type="number" id="strength-val" class="value-display" step="0.01" value="0.20"></div>
-                <input type="range" id="bloom-strength" min="0" max="2" step="0.01" value="0.20">
+                <div class="control-label"><span>辉光溢出强度 (Bloom):</span><input type="number" id="strength-val" class="value-display" step="0.001" value="0.200"></div>
+                <input type="range" id="bloom-strength" min="0.000" max="2.000" step="0.001" value="0.200">
             </div>
             <div class="control-group">
-                <div class="control-label"><span>辉光截断阈值 (Threshold):</span><input type="number" id="threshold-val" class="value-display" step="0.01" value="0.60"></div>
-                <input type="range" id="bloom-threshold" min="0" max="2" step="0.01" value="0.60">
+                <div class="control-label"><span>辉光截断阈值 (Threshold):</span><input type="number" id="threshold-val" class="value-display" step="0.001" value="0.600"></div>
+                <input type="range" id="bloom-threshold" min="0.000" max="2.000" step="0.001" value="0.600">
             </div>
             <div class="control-group">
-                <div class="control-label"><span>辉光扩散半径 (Radius):</span><input type="number" id="radius-val" class="value-display" step="0.01" value="0.40"></div>
-                <input type="range" id="bloom-radius" min="0" max="2" step="0.01" value="0.40">
+                <div class="control-label"><span>辉光扩散半径 (Radius):</span><input type="number" id="radius-val" class="value-display" step="0.001" value="0.400"></div>
+                <input type="range" id="bloom-radius" min="0.000" max="2.000" step="0.001" value="0.400">
             </div>
 
             <div class="divider"></div>
@@ -300,6 +298,7 @@
             exposure: document.getElementById('exposure-slider'),
             lightMultiplier: document.getElementById('light-multiplier-slider')
         };
+        
         const displays = {
             multiplier: document.getElementById('multiplier-val'),
             lightInt: document.getElementById('light-int-val'),
@@ -418,7 +417,6 @@
             document.getElementById('model-file-container').classList.add('active');
 
             const url = URL.createObjectURL(file);
-            
             showProgress("⚡ 正在解析并构建三维模型资产 Loading...");
 
             gltfLoader.load(url, function(gltf) {
@@ -480,7 +478,6 @@
                     varying vec4 vUv;
                     void main() {
                         vec4 base = vec4(0.0);
-                        
                         for(int i = 0; i < 48; i++) {
                             float f_i = float(i);
                             float r = sqrt(f_i + 0.5) / sqrt(48.0);
@@ -494,7 +491,6 @@
                             base += texture2DProj(tDiffuse, uv);
                         }
                         base /= 48.0;
-                        
                         gl_FragColor = vec4( base.rgb * color * intensity, 1.0 );
                         #include <tonemapping_fragment>
                         #include <colorspace_fragment>
@@ -547,7 +543,6 @@
             document.getElementById('exr-file-container').classList.add('active');
 
             const url = URL.createObjectURL(file);
-            
             showProgress("🌌 正在读取并解压 EXR 高动态范围贴图...");
 
             exrLoader.load(url, function(texture) {
@@ -556,7 +551,6 @@
                 scene.environment = exrTexture;
                 scene.background = inputs.exrToggle.checked ? exrTexture : new THREE.Color(0x000000);
                 URL.revokeObjectURL(url);
-                
                 hideProgress();
             }, function(xhr) {
                 updateProgress(xhr);
@@ -584,58 +578,91 @@
         });
 
         inputs.reflectorToggle.addEventListener('change', function(e) {
-            if (groundReflector) {
-                groundReflector.visible = e.target.checked;
-            }
+            if (groundReflector) groundReflector.visible = e.target.checked;
         });
 
+        // ✨ 核心修复区：分离输入焦点与展示焦点的格式化，不再阻断手敲打字
         inputs.reflectorY.addEventListener('input', (e) => {
             const val = Number(e.target.value);
-            displays.reflectorY.value = val.toFixed(2);
-            if (groundReflector) {
-                groundReflector.position.y = baseReflectorY + val;
-            }
+            if (document.activeElement !== displays.reflectorY) displays.reflectorY.value = val.toFixed(3);
+            if (groundReflector) groundReflector.position.y = baseReflectorY + val;
         });
         
         inputs.reflectorBlur.addEventListener('input', (e) => {
             const val = Number(e.target.value);
-            displays.reflectorBlur.value = val.toFixed(2);
-            if (groundReflector) {
-                groundReflector.material.uniforms.blurSize.value = val * 0.005;
-            }
+            if (document.activeElement !== displays.reflectorBlur) displays.reflectorBlur.value = val.toFixed(3);
+            if (groundReflector) groundReflector.material.uniforms.blurSize.value = val * 0.005;
         });
 
         inputs.reflectorIntensity.addEventListener('input', (e) => {
             const val = Number(e.target.value);
-            displays.reflectorIntensity.value = val.toFixed(2);
-            if (groundReflector) {
-                groundReflector.material.uniforms.intensity.value = val;
-            }
+            if (document.activeElement !== displays.reflectorIntensity) displays.reflectorIntensity.value = val.toFixed(3);
+            if (groundReflector) groundReflector.material.uniforms.intensity.value = val;
         });
 
         inputs.exposure.addEventListener('input', (e) => {
             const val = Number(e.target.value);
-            displays.exposure.value = val.toFixed(2);
+            if (document.activeElement !== displays.exposure) displays.exposure.value = val.toFixed(3);
             renderer.toneMappingExposure = val; 
         });
 
         inputs.lightMultiplier.addEventListener('input', (e) => {
-            displays.lightMultiplier.value = Number(e.target.value).toFixed(2);
+            const val = Number(e.target.value);
+            if (document.activeElement !== displays.lightMultiplier) displays.lightMultiplier.value = val.toFixed(3);
         });
 
-        inputs.multiplier.addEventListener('input', (e) => { displays.multiplier.value = Number(e.target.value).toFixed(2); });
-        inputs.lightInt.addEventListener('input', (e) => { const val = Number(e.target.value); displays.lightInt.value = val.toFixed(2); bounceLight.intensity = val; });
-        inputs.ambient.addEventListener('input', (e) => { const val = Number(e.target.value); displays.ambient.value = val.toFixed(2); ambientLight.intensity = val; });
-        inputs.contrast.addEventListener('input', (e) => { const val = Number(e.target.value); displays.contrast.value = val.toFixed(2); contrastPass.uniforms["contrast"].value = val; });
-        inputs.strength.addEventListener('input', (e) => { const val = Number(e.target.value); displays.strength.value = val.toFixed(2); bloomPass.strength = val; });
-        inputs.threshold.addEventListener('input', (e) => { const val = Number(e.target.value); displays.threshold.value = val.toFixed(2); bloomPass.threshold = val; });
-        inputs.radius.addEventListener('input', (e) => { const val = Number(e.target.value); displays.radius.value = val.toFixed(2); bloomPass.radius = val; });
+        inputs.multiplier.addEventListener('input', (e) => { 
+            const val = Number(e.target.value);
+            if (document.activeElement !== displays.multiplier) displays.multiplier.value = val.toFixed(3); 
+        });
+        inputs.lightInt.addEventListener('input', (e) => { 
+            const val = Number(e.target.value); 
+            if (document.activeElement !== displays.lightInt) displays.lightInt.value = val.toFixed(3); 
+            bounceLight.intensity = val; 
+        });
+        inputs.ambient.addEventListener('input', (e) => { 
+            const val = Number(e.target.value); 
+            if (document.activeElement !== displays.ambient) displays.ambient.value = val.toFixed(3); 
+            ambientLight.intensity = val; 
+        });
+        inputs.contrast.addEventListener('input', (e) => { 
+            const val = Number(e.target.value); 
+            if (document.activeElement !== displays.contrast) displays.contrast.value = val.toFixed(3); 
+            contrastPass.uniforms["contrast"].value = val; 
+        });
+        inputs.strength.addEventListener('input', (e) => { 
+            const val = Number(e.target.value); 
+            if (document.activeElement !== displays.strength) displays.strength.value = val.toFixed(3); 
+            bloomPass.strength = val; 
+        });
+        inputs.threshold.addEventListener('input', (e) => { 
+            const val = Number(e.target.value); 
+            if (document.activeElement !== displays.threshold) displays.threshold.value = val.toFixed(3); 
+            bloomPass.threshold = val; 
+        });
+        inputs.radius.addEventListener('input', (e) => { 
+            const val = Number(e.target.value); 
+            if (document.activeElement !== displays.radius) displays.radius.value = val.toFixed(3); 
+            bloomPass.radius = val; 
+        });
 
+        // ✨ 统一化且防卡顿的按键/滚轮控制逻辑
         Object.keys(inputs).forEach(key => {
             const rangeInput = inputs[key];
             const numInput = displays[key];
 
             if (rangeInput && rangeInput.type === 'range' && numInput) {
+                
+                // 实时双向绑定：打字实时渲染 3D 效果
+                numInput.addEventListener('input', (e) => {
+                    let val = parseFloat(e.target.value);
+                    if (!isNaN(val)) {
+                        rangeInput.value = val;
+                        rangeInput.dispatchEvent(new Event('input')); 
+                    }
+                });
+
+                // 输入完成失焦后，补全并严格规范化数值格式
                 numInput.addEventListener('change', (e) => {
                     let val = Number(e.target.value);
                     const min = Number(rangeInput.min);
@@ -643,15 +670,16 @@
                     if (val < min) val = min;
                     if (val > max) val = max;
                     
-                    numInput.value = val.toFixed(2);
+                    numInput.value = val.toFixed(3);
                     rangeInput.value = val;
                     rangeInput.dispatchEvent(new Event('input')); 
                 });
 
+                // 仅针对 滑块(range) 接管自定义方向键步进，（数字框保留浏览器原生光标移动及步进）
                 rangeInput.addEventListener('keydown', (e) => {
                     if (['ArrowUp', 'ArrowRight', 'ArrowDown', 'ArrowLeft'].includes(e.key)) {
                         e.preventDefault();
-                        let stepSize = e.shiftKey ? 0.01 : 0.1;
+                        let stepSize = e.shiftKey ? 0.001 : 0.01;
                         let dir = (e.key === 'ArrowUp' || e.key === 'ArrowRight') ? 1 : -1;
                         let val = Number(rangeInput.value) + dir * stepSize;
                         const min = Number(rangeInput.min);
@@ -659,14 +687,15 @@
                         if (val < min) val = min;
                         if (val > max) val = max;
                         
-                        rangeInput.value = val.toFixed(2);
+                        rangeInput.value = val.toFixed(3);
                         rangeInput.dispatchEvent(new Event('input'));
                     }
                 });
 
-                rangeInput.addEventListener('wheel', (e) => {
+                // 通用滚轮控制逻辑：悬浮在滑块或输入框均可控制
+                const handleWheel = (e) => {
                     e.preventDefault();
-                    let stepSize = e.shiftKey ? 0.01 : 0.1;
+                    let stepSize = e.shiftKey ? 0.001 : 0.01;
                     let dir = e.deltaY < 0 ? 1 : -1; 
                     let val = Number(rangeInput.value) + dir * stepSize;
                     const min = Number(rangeInput.min);
@@ -674,9 +703,12 @@
                     if (val < min) val = min;
                     if (val > max) val = max;
                     
-                    rangeInput.value = val.toFixed(2);
+                    rangeInput.value = val.toFixed(3);
                     rangeInput.dispatchEvent(new Event('input'));
-                });
+                };
+
+                rangeInput.addEventListener('wheel', handleWheel);
+                numInput.addEventListener('wheel', handleWheel);
             }
         });
 

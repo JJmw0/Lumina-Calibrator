@@ -174,14 +174,14 @@
             <div class="control-group" style="flex-direction: row; justify-content: space-between; align-items: center;">
                 <div style="color: #ffb703; font-size: 12px; font-weight: bold;">✨ 开启地面镜面倒影 (Reflector)</div>
                 <label class="switch">
-                    <input type="checkbox" id="reflector-toggle" checked>
+                    <input type="checkbox" id="reflector-toggle">
                     <span class="slider"></span>
                 </label>
             </div>
 
             <div class="control-group">
-                <div class="control-label"><span style="color:#ffb703;">地面反射高度 (Y-Offset):</span><input type="number" id="reflector-y-val" class="value-display" style="color:#ffb703;" step="0.001" value="0.000"></div>
-                <input type="range" id="reflector-y-slider" min="-2.000" max="2.000" step="0.001" value="0.000" style="accent-color: #ffb703;">
+                <div class="control-label"><span style="color:#ffb703;">地面反射高度 (Y-Offset):</span><input type="number" id="reflector-y-val" class="value-display" style="color:#ffb703;" step="0.001" value="0.226"></div>
+                <input type="range" id="reflector-y-slider" min="-2.000" max="2.000" step="0.001" value="0.226" style="accent-color: #ffb703;">
             </div>
             <div class="control-group">
                 <div class="control-label"><span style="color:#ffb703;">反射模糊度 (Blur):</span><input type="number" id="reflector-blur-val" class="value-display" style="color:#ffb703;" step="0.001" value="0.500"></div>
@@ -195,29 +195,29 @@
             <div class="divider"></div>
 
             <div class="control-group">
-                <div class="control-label"><span style="color:#f72585;">相机曝光度 (Exposure):</span><input type="number" id="exposure-val" class="value-display" style="color:#f72585;" step="0.001" value="1.000"></div>
-                <input type="range" id="exposure-slider" min="0.000" max="3.000" step="0.001" value="1.000" style="accent-color: #f72585;">
+                <div class="control-label"><span style="color:#f72585;">相机曝光度 (Exposure):</span><input type="number" id="exposure-val" class="value-display" style="color:#f72585;" step="0.001" value="0.869"></div>
+                <input type="range" id="exposure-slider" min="0.000" max="3.000" step="0.001" value="0.869" style="accent-color: #f72585;">
             </div>
 
             <div class="control-group">
-                <div class="control-label"><span>模型原生发光倍数 (Emission Multiplier):</span><input type="number" id="multiplier-val" class="value-display" step="0.001" value="1.000"></div>
-                <input type="range" id="emission-multiplier" min="0.000" max="10.000" step="0.001" value="1.000">
+                <div class="control-label"><span>模型原生发光倍数 (Emission Multiplier):</span><input type="number" id="multiplier-val" class="value-display" step="0.001" value="0.000"></div>
+                <input type="range" id="emission-multiplier" min="0.000" max="10.000" step="0.001" value="0.000">
             </div>
 
             <div class="control-group">
-                <div class="control-label"><span>内置灯光倍数 (GLB Lights):</span><input type="number" id="light-multiplier-val" class="value-display" step="0.001" value="1.000"></div>
-                <input type="range" id="light-multiplier-slider" min="0.000" max="2.000" step="0.001" value="1.000">
+                <div class="control-label"><span>内置灯光倍数 (GLB Lights):</span><input type="number" id="light-multiplier-val" class="value-display" step="0.001" value="0.000"></div>
+                <input type="range" id="light-multiplier-slider" min="0.000" max="2.000" step="0.001" value="0.000">
             </div>
 
             <div class="divider"></div>
 
             <div class="control-group">
-                <div class="control-label"><span style="color:#00ff88;">地面反射光晕 (Bounce):</span><input type="number" id="light-int-val" class="value-display" style="color:#00ff88;" step="0.001" value="5.000"></div>
-                <input type="range" id="light-intensity" min="0.000" max="20.000" step="0.001" value="5.000" style="accent-color: #00ff88;">
+                <div class="control-label"><span style="color:#00ff88;">地面反射光晕 (Bounce):</span><input type="number" id="light-int-val" class="value-display" style="color:#00ff88;" step="0.001" value="4.708"></div>
+                <input type="range" id="light-intensity" min="0.000" max="20.000" step="0.001" value="4.708" style="accent-color: #00ff88;">
             </div>
             <div class="control-group">
-                <div class="control-label"><span style="color:#00ff88;">暗部环境能见度 (Ambient):</span><input type="number" id="ambient-val" class="value-display" style="color:#00ff88;" step="0.001" value="0.200"></div>
-                <input type="range" id="ambient-intensity" min="0.000" max="2.000" step="0.001" value="0.200" style="accent-color: #00ff88;">
+                <div class="control-label"><span style="color:#00ff88;">暗部环境能见度 (Ambient):</span><input type="number" id="ambient-val" class="value-display" style="color:#00ff88;" step="0.001" value="0.379"></div>
+                <input type="range" id="ambient-intensity" min="0.000" max="2.000" step="0.001" value="0.379" style="accent-color: #00ff88;">
             </div>
 
             <div class="divider"></div>
@@ -228,16 +228,16 @@
             </div>
 
             <div class="control-group">
-                <div class="control-label"><span>辉光溢出强度 (Bloom):</span><input type="number" id="strength-val" class="value-display" step="0.001" value="0.200"></div>
-                <input type="range" id="bloom-strength" min="0.000" max="2.000" step="0.001" value="0.200">
+                <div class="control-label"><span>辉光溢出强度 (Bloom):</span><input type="number" id="strength-val" class="value-display" step="0.001" value="0.000"></div>
+                <input type="range" id="bloom-strength" min="0.000" max="2.000" step="0.001" value="0.000">
             </div>
             <div class="control-group">
-                <div class="control-label"><span>辉光截断阈值 (Threshold):</span><input type="number" id="threshold-val" class="value-display" step="0.001" value="0.600"></div>
-                <input type="range" id="bloom-threshold" min="0.000" max="2.000" step="0.001" value="0.600">
+                <div class="control-label"><span>辉光截断阈值 (Threshold):</span><input type="number" id="threshold-val" class="value-display" step="0.001" value="0.581"></div>
+                <input type="range" id="bloom-threshold" min="0.000" max="2.000" step="0.001" value="0.581">
             </div>
             <div class="control-group">
-                <div class="control-label"><span>辉光扩散半径 (Radius):</span><input type="number" id="radius-val" class="value-display" step="0.001" value="0.400"></div>
-                <input type="range" id="bloom-radius" min="0.000" max="2.000" step="0.001" value="0.400">
+                <div class="control-label"><span>辉光扩散半径 (Radius):</span><input type="number" id="radius-val" class="value-display" step="0.001" value="0.000"></div>
+                <input type="range" id="bloom-radius" min="0.000" max="2.000" step="0.001" value="0.000">
             </div>
 
             <div class="divider"></div>
@@ -269,6 +269,7 @@
         import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
         import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
         import { Reflector } from 'three/addons/objects/Reflector.js';
+        import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
         const ContrastShader = {
             uniforms: {
@@ -343,7 +344,7 @@
         scene.add(bounceLight);
 
         const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100000);
-        camera.position.set(0, 5, 10);
+        camera.position.set(-32.85226741771379, 58.836790708792314, 82.48901799352326);
 
         const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: "high-performance" });
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -352,6 +353,11 @@
         renderer.outputColorSpace = THREE.SRGBColorSpace; 
         renderer.toneMapping = THREE.AgXToneMapping; 
         renderer.toneMappingExposure = Number(inputs.exposure.value);
+
+        // DEFAULT HDRI 
+        const pmremGenerator = new THREE.PMREMGenerator(renderer);
+        const defaultEnvironment = pmremGenerator.fromScene(new RoomEnvironment(), 0.04).texture;
+        scene.environment = defaultEnvironment;
         
         const canvasContainer = document.getElementById('canvas-container');
         canvasContainer.innerHTML = '';
@@ -375,14 +381,17 @@
         composer.addPass(new OutputPass());
 
         const controls = new MapControls(camera, renderer.domElement);
+        controls.target.set(25.13661167138972, 6.938076201442838e-58, 4.435872647892313);
         controls.enableDamping = true;
         controls.dampingFactor = 0.05;
         controls.maxPolarAngle = Math.PI / 2 - 0.05;
+        controls.update();
 
         let currentModel = null;
         let exrTexture = null;
         let groundReflector = null; 
         let baseReflectorY = 0;     
+        let isFirstModelLoad = true; 
 
         const gltfLoader = new GLTFLoader();
         const exrLoader = new EXRLoader();
@@ -446,12 +455,17 @@
                 bounceLight.position.set(0, maxDim * 0.1, 0); 
                 bounceLight.distance = maxDim * 1.5;
                 
-                camera.position.set(0, maxDim * 1.2, maxDim * 1.8);
-                camera.lookAt(0, 0, 0);
-                controls.target.set(0, 0, 0);
+                if (isFirstModelLoad) {
+                    isFirstModelLoad = false;
+                } else {
+                    camera.position.set(0, maxDim * 1.2, maxDim * 1.8);
+                    camera.lookAt(0, 0, 0);
+                    controls.target.set(0, 0, 0);
+                }
 
                 controls.minDistance = maxDim * 0.05; 
                 controls.maxDistance = maxDim * 5.0;  
+                controls.update();
 
                 if (groundReflector) {
                     scene.remove(groundReflector);
@@ -562,7 +576,7 @@
         });
 
         document.getElementById('exr-delete-btn').addEventListener('click', function() {
-            scene.environment = null;
+            scene.environment = defaultEnvironment;
             scene.background = new THREE.Color(0x000000);
             exrTexture = null;
             

@@ -162,9 +162,17 @@
             </div>
 
             <div class="control-group" style="flex-direction: row; justify-content: space-between; align-items: center; margin-top: 8px;">
-                <div style="color: #90e0ef; font-size: 12px;">EXR 背景对摄像机可见 Show EXR Background to Camera</div>
+                <div style="color: #90e0ef; font-size: 12px;">EXR 背景对摄像机可见 Show EXR Background</div>
                 <label class="switch">
                     <input type="checkbox" id="exr-visible-toggle">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            
+            <div class="control-group" style="flex-direction: row; justify-content: space-between; align-items: center; margin-top: 8px;">
+                <div style="color: #90e0ef; font-size: 12px;">使用默认简单 HDRI (Default HDRI)</div>
+                <label class="switch">
+                    <input type="checkbox" id="default-hdri-toggle" checked>
                     <span class="slider"></span>
                 </label>
             </div>
@@ -292,6 +300,7 @@
             threshold: document.getElementById('bloom-threshold'),
             radius: document.getElementById('bloom-radius'),
             exrToggle: document.getElementById('exr-visible-toggle'),
+            defaultHdriToggle: document.getElementById('default-hdri-toggle'),
             reflectorToggle: document.getElementById('reflector-toggle'),
             reflectorY: document.getElementById('reflector-y-slider'),
             reflectorBlur: document.getElementById('reflector-blur-slider'), 
@@ -357,7 +366,18 @@
         // DEFAULT HDRI 
         const pmremGenerator = new THREE.PMREMGenerator(renderer);
         const defaultEnvironment = pmremGenerator.fromScene(new RoomEnvironment(), 0.04).texture;
-        scene.environment = defaultEnvironment;
+        
+        let exrTexture = null;
+        function updateEnvironment() {
+            if (exrTexture) {
+                scene.environment = exrTexture;
+                scene.background = inputs.exrToggle.checked ? exrTexture : new THREE.Color(0x000000);
+            } else {
+                scene.environment = inputs.defaultHdriToggle.checked ? defaultEnvironment : null;
+                scene.background = new THREE.Color(0x000000); 
+            }
+        }
+        updateEnvironment();
         
         const canvasContainer = document.getElementById('canvas-container');
         canvasContainer.innerHTML = '';
@@ -388,10 +408,8 @@
         controls.update();
 
         let currentModel = null;
-        let exrTexture = null;
         let groundReflector = null; 
         let baseReflectorY = 0;     
-        let isFirstModelLoad = true; 
 
         const gltfLoader = new GLTFLoader();
         const exrLoader = new EXRLoader();
@@ -455,13 +473,9 @@
                 bounceLight.position.set(0, maxDim * 0.1, 0); 
                 bounceLight.distance = maxDim * 1.5;
                 
-                if (isFirstModelLoad) {
-                    isFirstModelLoad = false;
-                } else {
-                    camera.position.set(0, maxDim * 1.2, maxDim * 1.8);
-                    camera.lookAt(0, 0, 0);
-                    controls.target.set(0, 0, 0);
-                }
+                camera.position.set(0, maxDim * 0.5, maxDim * 1.5);
+                camera.lookAt(0, 0, 0);
+                controls.target.set(0, 0, 0);
 
                 controls.minDistance = maxDim * 0.05; 
                 controls.maxDistance = maxDim * 5.0;  
@@ -562,8 +576,7 @@
             exrLoader.load(url, function(texture) {
                 texture.mapping = THREE.EquirectangularReflectionMapping;
                 exrTexture = texture;
-                scene.environment = exrTexture;
-                scene.background = inputs.exrToggle.checked ? exrTexture : new THREE.Color(0x000000);
+                updateEnvironment();
                 URL.revokeObjectURL(url);
                 hideProgress();
             }, function(xhr) {
@@ -576,26 +589,21 @@
         });
 
         document.getElementById('exr-delete-btn').addEventListener('click', function() {
-            scene.environment = defaultEnvironment;
-            scene.background = new THREE.Color(0x000000);
             exrTexture = null;
+            updateEnvironment(); 
             
             document.getElementById('exr-input').value = '';
             document.getElementById('exr-input').style.display = 'block';
             document.getElementById('exr-file-container').classList.remove('active');
         });
 
-        inputs.exrToggle.addEventListener('change', function(e) {
-            if (exrTexture) {
-                scene.background = e.target.checked ? exrTexture : new THREE.Color(0x000000);
-            }
-        });
+        inputs.exrToggle.addEventListener('change', updateEnvironment);
+        inputs.defaultHdriToggle.addEventListener('change', updateEnvironment);
 
         inputs.reflectorToggle.addEventListener('change', function(e) {
             if (groundReflector) groundReflector.visible = e.target.checked;
         });
 
-        // ✨ 核心修复区：分离输入焦点与展示焦点的格式化，不再阻断手敲打字
         inputs.reflectorY.addEventListener('input', (e) => {
             const val = Number(e.target.value);
             if (document.activeElement !== displays.reflectorY) displays.reflectorY.value = val.toFixed(3);
@@ -660,14 +668,12 @@
             bloomPass.radius = val; 
         });
 
-        // ✨ 统一化且防卡顿的按键/滚轮控制逻辑
         Object.keys(inputs).forEach(key => {
             const rangeInput = inputs[key];
             const numInput = displays[key];
 
             if (rangeInput && rangeInput.type === 'range' && numInput) {
                 
-                // 实时双向绑定：打字实时渲染 3D 效果
                 numInput.addEventListener('input', (e) => {
                     let val = parseFloat(e.target.value);
                     if (!isNaN(val)) {
@@ -676,7 +682,6 @@
                     }
                 });
 
-                // 输入完成失焦后，补全并严格规范化数值格式
                 numInput.addEventListener('change', (e) => {
                     let val = Number(e.target.value);
                     const min = Number(rangeInput.min);
@@ -689,7 +694,6 @@
                     rangeInput.dispatchEvent(new Event('input')); 
                 });
 
-                // 仅针对 滑块(range) 接管自定义方向键步进，（数字框保留浏览器原生光标移动及步进）
                 rangeInput.addEventListener('keydown', (e) => {
                     if (['ArrowUp', 'ArrowRight', 'ArrowDown', 'ArrowLeft'].includes(e.key)) {
                         e.preventDefault();
@@ -706,7 +710,6 @@
                     }
                 });
 
-                // 通用滚轮控制逻辑：悬浮在滑块或输入框均可控制
                 const handleWheel = (e) => {
                     e.preventDefault();
                     let stepSize = e.shiftKey ? 0.001 : 0.01;

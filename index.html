@@ -141,7 +141,7 @@
         </div>
         
         <div id="ui-content">
-            <div class="sub-title">Supports one-click export and import of the entire environment, configuration, and codebase.</div>
+            <div class="sub-title">Supports one-click export and import of the entire environment, configuration, and codebase. (双击模型表面可重定位缩放中心)</div>
             
             <div class="file-upload-wrapper">
                 <label>1. 加载模型 Load Model (.glb, .gltf)</label>
@@ -352,7 +352,7 @@
         bounceLight.position.set(0, 10, 0);
         scene.add(bounceLight);
 
-        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100000);
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.001, 100000);
         camera.position.set(-32.85226741771379, 58.836790708792314, 82.48901799352326);
 
         const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: "high-performance" });
@@ -477,8 +477,13 @@
                 camera.lookAt(0, 0, 0);
                 controls.target.set(0, 0, 0);
 
-                controls.minDistance = maxDim * 0.05; 
-                controls.maxDistance = maxDim * 5.0;  
+                // 解除缩放限制并防穿模
+                controls.minDistance = 0.0001;
+                controls.maxDistance = maxDim * 10.0;
+                
+                camera.near = Math.max(0.00001, maxDim * 0.00001);
+                camera.updateProjectionMatrix();
+                
                 controls.update();
 
                 if (groundReflector) {
@@ -804,6 +809,22 @@
             };
             reader.readAsText(file);
             event.target.value = ''; 
+        });
+
+        // 双击模型表面重定位缩放中心（解决卡住问题）
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+
+        window.addEventListener('dblclick', (event) => {
+            if (!currentModel) return;
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObject(currentModel, true);
+            if (intersects.length > 0) {
+                controls.target.copy(intersects[0].point);
+                controls.update();
+            }
         });
 
         function animate() {

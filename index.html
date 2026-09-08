@@ -250,6 +250,25 @@
 
             <div class="divider"></div>
 
+            <div class="control-group" style="flex-direction: row; justify-content: space-between; align-items: center;">
+                <div style="color: #bde0fe; font-size: 12px; font-weight: bold;">📷 相机视图 (Camera View)</div>
+            </div>
+
+            <div class="control-group">
+                <div class="control-label"><span>Focal Length (mm):</span><input type="number" id="focal-length-val" class="value-display" step="1" value="50"></div>
+                <input type="range" id="focal-length-slider" min="10" max="200" step="1" value="50">
+            </div>
+            <div class="control-group">
+                <div class="control-label"><span>Clip Start (near):</span><input type="number" id="clip-start-val" class="value-display" step="0.01" value="0.10"></div>
+                <input type="range" id="clip-start-slider" min="0.001" max="10" step="0.001" value="0.10">
+            </div>
+            <div class="control-group">
+                <div class="control-label"><span>Clip End (far):</span><input type="number" id="clip-end-val" class="value-display" step="100" value="10000"></div>
+                <input type="range" id="clip-end-slider" min="100" max="100000" step="100" value="10000">
+            </div>
+
+            <div class="divider"></div>
+
             <div class="control-group">
                 <button id="export-code-btn" class="action-btn">📤 导出当前完整代码 (Export Current Code) (.js)</button>
             </div>
@@ -306,7 +325,10 @@
             reflectorBlur: document.getElementById('reflector-blur-slider'), 
             reflectorIntensity: document.getElementById('reflector-intensity-slider'), 
             exposure: document.getElementById('exposure-slider'),
-            lightMultiplier: document.getElementById('light-multiplier-slider')
+            lightMultiplier: document.getElementById('light-multiplier-slider'),
+            focalLength: document.getElementById('focal-length-slider'),
+            clipStart: document.getElementById('clip-start-slider'),
+            clipEnd: document.getElementById('clip-end-slider')
         };
         
         const displays = {
@@ -321,7 +343,10 @@
             reflectorBlur: document.getElementById('reflector-blur-val'), 
             reflectorIntensity: document.getElementById('reflector-intensity-val'), 
             exposure: document.getElementById('exposure-val'),
-            lightMultiplier: document.getElementById('light-multiplier-val')
+            lightMultiplier: document.getElementById('light-multiplier-val'),
+            focalLength: document.getElementById('focal-length-val'),
+            clipStart: document.getElementById('clip-start-val'),
+            clipEnd: document.getElementById('clip-end-val')
         };
 
         const overlay = document.getElementById('loading-overlay');
@@ -352,10 +377,12 @@
         bounceLight.position.set(0, 10, 0);
         scene.add(bounceLight);
 
-        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.001, 100000);
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 10000);
+        camera.setFocalLength(50);
         camera.position.set(-32.85226741771379, 58.836790708792314, 82.48901799352326);
 
-        const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: "high-performance" });
+        // 开启对数深度缓冲 (logarithmicDepthBuffer) 解决大场景深度冲突
+        const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: "high-performance", logarithmicDepthBuffer: true });
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.setSize(window.innerWidth, window.innerHeight);
         
@@ -477,11 +504,12 @@
                 camera.lookAt(0, 0, 0);
                 controls.target.set(0, 0, 0);
 
-                // 解除缩放限制并防穿模
                 controls.minDistance = 0.0001;
                 controls.maxDistance = maxDim * 10.0;
                 
-                camera.near = Math.max(0.00001, maxDim * 0.00001);
+                // 应用UI上的裁剪面设置，而不是强制缩小
+                camera.near = Number(inputs.clipStart.value);
+                camera.far = Number(inputs.clipEnd.value);
                 camera.updateProjectionMatrix();
                 
                 controls.update();
@@ -673,6 +701,26 @@
             bloomPass.radius = val; 
         });
 
+        inputs.focalLength.addEventListener('input', (e) => {
+            const val = Number(e.target.value);
+            if (document.activeElement !== displays.focalLength) displays.focalLength.value = val;
+            camera.setFocalLength(val); 
+        });
+
+        inputs.clipStart.addEventListener('input', (e) => {
+            const val = Number(e.target.value);
+            if (document.activeElement !== displays.clipStart) displays.clipStart.value = val.toFixed(3);
+            camera.near = val;
+            camera.updateProjectionMatrix();
+        });
+
+        inputs.clipEnd.addEventListener('input', (e) => {
+            const val = Number(e.target.value);
+            if (document.activeElement !== displays.clipEnd) displays.clipEnd.value = val;
+            camera.far = val;
+            camera.updateProjectionMatrix();
+        });
+
         Object.keys(inputs).forEach(key => {
             const rangeInput = inputs[key];
             const numInput = displays[key];
@@ -694,7 +742,7 @@
                     if (val < min) val = min;
                     if (val > max) val = max;
                     
-                    numInput.value = val.toFixed(3);
+                    numInput.value = (rangeInput.step === "1" || rangeInput.step === "100") ? val : val.toFixed(3);
                     rangeInput.value = val;
                     rangeInput.dispatchEvent(new Event('input')); 
                 });
@@ -710,7 +758,7 @@
                         if (val < min) val = min;
                         if (val > max) val = max;
                         
-                        rangeInput.value = val.toFixed(3);
+                        rangeInput.value = (rangeInput.step === "1" || rangeInput.step === "100") ? val : val.toFixed(3);
                         rangeInput.dispatchEvent(new Event('input'));
                     }
                 });
@@ -725,7 +773,7 @@
                     if (val < min) val = min;
                     if (val > max) val = max;
                     
-                    rangeInput.value = val.toFixed(3);
+                    rangeInput.value = (rangeInput.step === "1" || rangeInput.step === "100") ? val : val.toFixed(3);
                     rangeInput.dispatchEvent(new Event('input'));
                 };
 

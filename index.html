@@ -141,10 +141,10 @@
         </div>
         
         <div id="ui-content">
-            <div class="sub-title">Supports one-click export and import of the entire environment, configuration, and codebase. (双击模型表面可重定位缩放中心)</div>
+            <div class="sub-title">Supports one-click export and import of the entire environment, configuration, and codebase. (双击模型表面可重定位缩放中心)[cite: 6]</div>
             
             <div class="file-upload-wrapper">
-                <label>1. 加载模型 Load Model (.glb, .gltf)</label>
+                <label>1. 加载模型 Load Model (.glb, .gltf)[cite: 6]</label>
                 <input type="file" id="file-input" accept=".glb, .gltf">
                 <div class="selected-file-container" id="model-file-container">
                     <span class="file-name" id="model-file-name"></span>
@@ -152,8 +152,8 @@
                 </div>
             </div>
         
-            <div class="file-upload-wrapper">
-                <label>2. 加载环境光贴图 Load HDRI (.exr)</label>
+            <div class="file-upload-wrapper" style="margin-bottom: 4px;">
+                <label>2. 加载环境光贴图 Load HDRI (.exr)[cite: 6]</label>
                 <input type="file" id="exr-input" accept=".exr">
                 <div class="selected-file-container" id="exr-file-container">
                     <span class="file-name" id="exr-file-name"></span>
@@ -161,8 +161,13 @@
                 </div>
             </div>
 
+            <div class="control-group" style="margin-top: 4px; margin-bottom: 12px;">
+                <div class="control-label"><span style="color:#00e5ff;">环境光强度 (Env Intensity):</span><input type="number" id="env-intensity-val" class="value-display" style="color:#00e5ff;" step="0.001" value="1.000"></div>
+                <input type="range" id="env-intensity-slider" min="0.000" max="5.000" step="0.001" value="1.000" style="accent-color: #00e5ff;">
+            </div>
+
             <div class="control-group" style="flex-direction: row; justify-content: space-between; align-items: center; margin-top: 8px;">
-                <div style="color: #90e0ef; font-size: 12px;">EXR 背景对摄像机可见 Show EXR Background</div>
+                <div style="color: #90e0ef; font-size: 12px;">EXR 背景对摄像机可见 Show EXR Background[cite: 6]</div>
                 <label class="switch">
                     <input type="checkbox" id="exr-visible-toggle">
                     <span class="slider"></span>
@@ -170,7 +175,7 @@
             </div>
             
             <div class="control-group" style="flex-direction: row; justify-content: space-between; align-items: center; margin-top: 8px;">
-                <div style="color: #90e0ef; font-size: 12px;">使用默认简单 HDRI (Default HDRI)</div>
+                <div style="color: #90e0ef; font-size: 12px;">使用默认简单 HDRI (Default HDRI)[cite: 6]</div>
                 <label class="switch">
                     <input type="checkbox" id="default-hdri-toggle" checked>
                     <span class="slider"></span>
@@ -180,7 +185,7 @@
             <div class="divider"></div>
 
             <div class="control-group" style="flex-direction: row; justify-content: space-between; align-items: center;">
-                <div style="color: #ffb703; font-size: 12px; font-weight: bold;">✨ 开启地面镜面倒影 (Reflector)</div>
+                <div style="color: #ffb703; font-size: 12px; font-weight: bold;">✨ 开启地面镜面倒影 (Reflector)[cite: 6]</div>
                 <label class="switch">
                     <input type="checkbox" id="reflector-toggle">
                     <span class="slider"></span>
@@ -251,7 +256,7 @@
             <div class="divider"></div>
 
             <div class="control-group" style="flex-direction: row; justify-content: space-between; align-items: center;">
-                <div style="color: #bde0fe; font-size: 12px; font-weight: bold;">📷 相机视图 (Camera View)</div>
+                <div style="color: #bde0fe; font-size: 12px; font-weight: bold;">📷 相机视图 (Camera View)[cite: 6]</div>
             </div>
 
             <div class="control-group">
@@ -270,11 +275,11 @@
             <div class="divider"></div>
 
             <div class="control-group">
-                <button id="export-code-btn" class="action-btn">📤 导出当前完整代码 (Export Current Code) (.js)</button>
+                <button id="export-code-btn" class="action-btn">📤 导出当前完整代码 (Export Current Code) (.js)[cite: 6]</button>
             </div>
             <div class="control-group" style="flex-direction: row; gap: 8px; margin-top: 8px;">
-                <button id="export-params-btn" class="action-btn secondary">💾 导出参数 (Export Parameters) (JSON)</button>
-                <button id="import-params-btn" class="action-btn secondary">📂 导入参数 (Import Parameters)</button>
+                <button id="export-params-btn" class="action-btn secondary">💾 导出参数 (Export Parameters) (JSON)[cite: 6]</button>
+                <button id="import-params-btn" class="action-btn secondary">📂 导入参数 (Import Parameters)[cite: 6]</button>
             </div>
             <input type="file" id="param-import-input" accept=".json" style="display:none;">
 
@@ -311,6 +316,7 @@
         scene.background = new THREE.Color(0x000000); 
 
         const inputs = {
+            envIntensity: document.getElementById('env-intensity-slider'),
             multiplier: document.getElementById('emission-multiplier'),
             lightInt: document.getElementById('light-intensity'),
             ambient: document.getElementById('ambient-intensity'),
@@ -332,6 +338,7 @@
         };
         
         const displays = {
+            envIntensity: document.getElementById('env-intensity-val'),
             multiplier: document.getElementById('multiplier-val'),
             lightInt: document.getElementById('light-int-val'),
             ambient: document.getElementById('ambient-val'),
@@ -476,6 +483,8 @@
             gltfLoader.load(url, function(gltf) {
                 if (currentModel) scene.remove(currentModel);
                 currentModel = gltf.scene;
+                
+                const currentEnvIntensity = Number(inputs.envIntensity.value);
 
                 currentModel.traverse((node) => {
                     if (node.isMesh && node.material) {
@@ -484,6 +493,7 @@
                             if (mat.emissive !== undefined) {
                                 node.userData.baseEmissiveIntensity = mat.emissiveIntensity || 0;
                             }
+                            mat.envMapIntensity = currentEnvIntensity;
                         });
                     }
                     if (node.isLight) {
@@ -632,6 +642,21 @@
 
         inputs.exrToggle.addEventListener('change', updateEnvironment);
         inputs.defaultHdriToggle.addEventListener('change', updateEnvironment);
+
+        inputs.envIntensity.addEventListener('input', (e) => {
+            const val = Number(e.target.value);
+            if (document.activeElement !== displays.envIntensity) displays.envIntensity.value = val.toFixed(3);
+            if (currentModel) {
+                currentModel.traverse((node) => {
+                    if (node.isMesh && node.material) {
+                        const mats = Array.isArray(node.material) ? node.material : [node.material];
+                        mats.forEach(mat => {
+                            mat.envMapIntensity = val;
+                        });
+                    }
+                });
+            }
+        });
 
         inputs.reflectorToggle.addEventListener('change', function(e) {
             if (groundReflector) groundReflector.visible = e.target.checked;

@@ -3,39 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lumina Calibrator</title>
+    <title>Lumina Calibrator - 曲线增强版</title>
     <style>
         * { box-sizing: border-box; }
         body { margin: 0; overflow: hidden; background-color: #000000; font-family: -apple-system, sans-serif; user-select: none; }
         
-        #canvas-container {
-            width: 100vw;
-            height: 100vh;
-            position: absolute;
-            top: 0;
-            left: 0;
-            z-index: 1;
-        }
+        #canvas-container { width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; z-index: 1; }
 
         #ui-container {
             position: absolute; top: 20px; left: 20px; background: rgba(10, 16, 26, 0.88);
             color: #e0f7fa; padding: 24px; border-radius: 12px; border: 1px solid #005f73;
-            box-shadow: 0 8px 32px rgba(0, 229, 255, 0.15); backdrop-filter: blur(8px); z-index: 100; width: 320px;
-            max-height: 90vh; overflow-y: auto;
-            transition: opacity 0.3s ease, padding 0.3s ease;
+            box-shadow: 0 8px 32px rgba(0, 229, 255, 0.15); backdrop-filter: blur(8px); z-index: 100; width: 340px;
+            max-height: 90vh; overflow-y: auto; transition: opacity 0.3s ease, padding 0.3s ease;
         }
 
-        #ui-container.minimized {
-            padding: 16px 24px;
-            overflow: hidden;
-            height: auto;
-        }
-        #ui-container.minimized #ui-content {
-            display: none;
-        }
-        #ui-container.minimized:not(:hover) {
-            opacity: 0.20;
-        }
+        #ui-container.minimized { padding: 16px 24px; overflow: hidden; height: auto; }
+        #ui-container.minimized #ui-content { display: none; }
+        #ui-container.minimized:not(:hover) { opacity: 0.20; }
 
         #ui-container::-webkit-scrollbar { width: 6px; }
         #ui-container::-webkit-scrollbar-track { background: transparent; }
@@ -53,36 +37,20 @@
         .value-display { color: #00e5ff; font-weight: bold; font-family: monospace; }
         input[type="range"] { width: 100%; height: 4px; background: #14213d; border-radius: 2px; outline: none; accent-color: #00e5ff; cursor: pointer; }
         .divider { border-top: 1px solid rgba(0, 119, 182, 0.3); margin: 18px 0; }
-        .status-box { font-size: 11px; color: #52b788; margin-top: 15px; background: rgba(82, 183, 136, 0.08); padding: 8px; border-radius: 4px; border: 1px solid rgba(82, 183, 136, 0.2); line-height: 1.4; }
 
         input[type="number"].value-display {
             background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(0, 229, 255, 0.3);
             border-radius: 4px; width: 66px; text-align: center; outline: none;
-            padding: 2px; font-size: 11px; transition: all 0.2s;
-            -moz-appearance: textfield;
+            padding: 2px; font-size: 11px; transition: all 0.2s; -moz-appearance: textfield;
         }
-        input[type="number"].value-display:focus {
-            border-color: #00e5ff; background: rgba(0, 0, 0, 0.6); box-shadow: 0 0 5px rgba(0, 229, 255, 0.4);
-        }
-        input[type="number"].value-display::-webkit-outer-spin-button,
-        input[type="number"].value-display::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type="number"].value-display:focus { border-color: #00e5ff; background: rgba(0, 0, 0, 0.6); box-shadow: 0 0 5px rgba(0, 229, 255, 0.4); }
+        input[type="number"].value-display::-webkit-outer-spin-button, input[type="number"].value-display::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 
-        .selected-file-container {
-            display: none; width: 100%; color: #00e5ff; font-size: 11px; background: rgba(0, 119, 182, 0.15); 
-            padding: 8px 10px; border-radius: 6px; border: 1px solid #0077b6; 
-            justify-content: space-between; align-items: center;
-        }
+        .selected-file-container { display: none; width: 100%; color: #00e5ff; font-size: 11px; background: rgba(0, 119, 182, 0.15); padding: 8px 10px; border-radius: 6px; border: 1px solid #0077b6; justify-content: space-between; align-items: center; }
         .selected-file-container.active { display: flex; }
-        .selected-file-container .file-name {
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 85%;
-        }
-        .selected-file-container .delete-btn {
-            color: #ff4d4d; cursor: pointer; font-size: 12px; font-weight: bold;
-            opacity: 0; transition: opacity 0.2s; padding: 0 4px; user-select: none;
-        }
-        .selected-file-container:hover .delete-btn {
-            opacity: 1;
-        }
+        .selected-file-container .file-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 85%; }
+        .selected-file-container .delete-btn { color: #ff4d4d; cursor: pointer; font-size: 12px; font-weight: bold; opacity: 0; transition: opacity 0.2s; padding: 0 4px; }
+        .selected-file-container:hover .delete-btn { opacity: 1; }
 
         .switch { position: relative; display: inline-block; width: 34px; height: 18px; }
         .switch input { opacity: 0; width: 0; height: 0; }
@@ -91,22 +59,12 @@
         input:checked + .slider { background-color: #0077b6; border-color: #00e5ff; }
         input:checked + .slider:before { transform: translateX(16px); background-color: #00e5ff; }
 
-        .action-btn {
-            width: 100%; background: #0077b6; border: 1px solid #005f73; color: #e0f7fa;
-            padding: 10px; border-radius: 6px; font-size: 12px; cursor: pointer;
-            font-weight: 500; transition: all 0.3s; text-align: center;
-        }
+        .action-btn { width: 100%; background: #0077b6; border: 1px solid #005f73; color: #e0f7fa; padding: 10px; border-radius: 6px; font-size: 12px; cursor: pointer; font-weight: 500; transition: all 0.3s; text-align: center; }
         .action-btn:hover { background: #0096c7; color: #fff; box-shadow: 0 0 10px rgba(0, 229, 255, 0.4); }
         .action-btn.secondary { background: rgba(0, 119, 182, 0.15); }
         .action-btn.secondary:hover { background: rgba(0, 119, 182, 0.4); }
 
-        #loading-overlay {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(5, 8, 15, 0.85); z-index: 999;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            color: #00e5ff; backdrop-filter: blur(10px);
-            opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
-        }
+        #loading-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(5, 8, 15, 0.85); z-index: 999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: #00e5ff; backdrop-filter: blur(10px); opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
         #loading-overlay.active { opacity: 1; pointer-events: auto; }
         .loading-title { font-size: 16px; font-weight: 600; margin-bottom: 12px; letter-spacing: 1px; color: #e0f7fa; }
         .progress-container { width: 280px; height: 6px; background: #14213d; border-radius: 4px; border: 1px solid #005f73; overflow: hidden; }
@@ -128,36 +86,34 @@
 
     <div id="loading-overlay">
         <div id="loading-title-text" class="loading-title">⚡ 正在解析三维数据模型 Loading...</div>
-        <div class="progress-container">
-            <div id="main-progress-bar" class="progress-bar-fill"></div>
-        </div>
+        <div class="progress-container"><div id="main-progress-bar" class="progress-bar-fill"></div></div>
         <div id="main-progress-text" class="progress-text">0%</div>
     </div>
 
     <div id="ui-container">
         <div class="ui-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
             <h3 style="margin: 0;">⚡ Lumina Calibrator</h3>
-            <span id="minimize-btn" style="cursor: pointer; color: #00e5ff; font-size: 20px; font-weight: bold; line-height: 1; padding: 0 5px;" title="最小化/展开面板 (Minimize/Restore)">−</span>
+            <span id="minimize-btn" style="cursor: pointer; color: #00e5ff; font-size: 20px; font-weight: bold; line-height: 1; padding: 0 5px;">−</span>
         </div>
         
         <div id="ui-content">
-            <div class="sub-title">Supports one-click export and import of the entire environment, configuration, and codebase. (双击模型表面可重定位缩放中心)[cite: 6]</div>
+            <div class="sub-title">Supports one-click export and import of the entire environment. (双击表面可重定位中心)</div>
             
             <div class="file-upload-wrapper">
-                <label>1. 加载模型 Load Model (.glb, .gltf)[cite: 6]</label>
+                <label>1. 加载模型 Load Model (.glb, .gltf)</label>
                 <input type="file" id="file-input" accept=".glb, .gltf">
                 <div class="selected-file-container" id="model-file-container">
                     <span class="file-name" id="model-file-name"></span>
-                    <span class="delete-btn" id="model-delete-btn" title="删除模型 Remove Model">✖</span>
+                    <span class="delete-btn" id="model-delete-btn">✖</span>
                 </div>
             </div>
         
             <div class="file-upload-wrapper" style="margin-bottom: 4px;">
-                <label>2. 加载环境光贴图 Load HDRI (.exr)[cite: 6]</label>
+                <label>2. 加载环境光贴图 Load HDRI (.exr)</label>
                 <input type="file" id="exr-input" accept=".exr">
                 <div class="selected-file-container" id="exr-file-container">
                     <span class="file-name" id="exr-file-name"></span>
-                    <span class="delete-btn" id="exr-delete-btn" title="删除环境光 Remove HDRI">✖</span>
+                    <span class="delete-btn" id="exr-delete-btn">✖</span>
                 </div>
             </div>
 
@@ -167,29 +123,20 @@
             </div>
 
             <div class="control-group" style="flex-direction: row; justify-content: space-between; align-items: center; margin-top: 8px;">
-                <div style="color: #90e0ef; font-size: 12px;">EXR 背景对摄像机可见 Show EXR Background[cite: 6]</div>
-                <label class="switch">
-                    <input type="checkbox" id="exr-visible-toggle">
-                    <span class="slider"></span>
-                </label>
+                <div style="color: #90e0ef; font-size: 12px;">EXR 背景对摄像机可见 Show EXR</div>
+                <label class="switch"><input type="checkbox" id="exr-visible-toggle"><span class="slider"></span></label>
             </div>
             
             <div class="control-group" style="flex-direction: row; justify-content: space-between; align-items: center; margin-top: 8px;">
-                <div style="color: #90e0ef; font-size: 12px;">使用默认简单 HDRI (Default HDRI)[cite: 6]</div>
-                <label class="switch">
-                    <input type="checkbox" id="default-hdri-toggle" checked>
-                    <span class="slider"></span>
-                </label>
+                <div style="color: #90e0ef; font-size: 12px;">使用默认简单 HDRI (Default)</div>
+                <label class="switch"><input type="checkbox" id="default-hdri-toggle" checked><span class="slider"></span></label>
             </div>
 
             <div class="divider"></div>
 
             <div class="control-group" style="flex-direction: row; justify-content: space-between; align-items: center;">
-                <div style="color: #ffb703; font-size: 12px; font-weight: bold;">✨ 开启地面镜面倒影 (Reflector)[cite: 6]</div>
-                <label class="switch">
-                    <input type="checkbox" id="reflector-toggle">
-                    <span class="slider"></span>
-                </label>
+                <div style="color: #ffb703; font-size: 12px; font-weight: bold;">✨ 开启地面镜面倒影 (Reflector)</div>
+                <label class="switch"><input type="checkbox" id="reflector-toggle"><span class="slider"></span></label>
             </div>
 
             <div class="control-group">
@@ -208,37 +155,58 @@
             <div class="divider"></div>
 
             <div class="control-group">
-                <div class="control-label"><span style="color:#f72585;">相机曝光度 (Exposure):</span><input type="number" id="exposure-val" class="value-display" style="color:#f72585;" step="0.001" value="0.869"></div>
-                <input type="range" id="exposure-slider" min="0.000" max="3.000" step="0.001" value="0.869" style="accent-color: #f72585;">
-            </div>
-
-            <div class="control-group">
-                <div class="control-label"><span>模型原生发光倍数 (Emission Multiplier):</span><input type="number" id="multiplier-val" class="value-display" step="0.001" value="0.000"></div>
+                <div class="control-label"><span>模型原生发光倍数 (Emission):</span><input type="number" id="multiplier-val" class="value-display" step="0.001" value="0.000"></div>
                 <input type="range" id="emission-multiplier" min="0.000" max="10.000" step="0.001" value="0.000">
             </div>
-
             <div class="control-group">
-                <div class="control-label"><span>内置灯光倍数 (GLB Lights):</span><input type="number" id="light-multiplier-val" class="value-display" step="0.001" value="0.000"></div>
-                <input type="range" id="light-multiplier-slider" min="0.000" max="2.000" step="0.001" value="0.000">
+                <div class="control-label"><span>内置灯光倍数 (GLB Lights):</span><input type="number" id="light-multiplier-val" class="value-display" step="0.001" value="0.001"></div>
+                <input type="range" id="light-multiplier-slider" min="0.000" max="5.000" step="0.001" value="0.001">
             </div>
-
-            <div class="divider"></div>
-
             <div class="control-group">
                 <div class="control-label"><span style="color:#00ff88;">地面反射光晕 (Bounce):</span><input type="number" id="light-int-val" class="value-display" style="color:#00ff88;" step="0.001" value="4.708"></div>
                 <input type="range" id="light-intensity" min="0.000" max="20.000" step="0.001" value="4.708" style="accent-color: #00ff88;">
             </div>
             <div class="control-group">
-                <div class="control-label"><span style="color:#00ff88;">暗部环境能见度 (Ambient):</span><input type="number" id="ambient-val" class="value-display" style="color:#00ff88;" step="0.001" value="0.379"></div>
-                <input type="range" id="ambient-intensity" min="0.000" max="2.000" step="0.001" value="0.379" style="accent-color: #00ff88;">
+                <div class="control-label"><span style="color:#00ff88;">暗部无差别漫反射 (Ambient):</span><input type="number" id="ambient-val" class="value-display" style="color:#00ff88;" step="0.001" value="0.000"></div>
+                <input type="range" id="ambient-intensity" min="0.000" max="2.000" step="0.001" value="0.000" style="accent-color: #00ff88;">
             </div>
 
             <div class="divider"></div>
 
-            <div class="control-group">
-                <div class="control-label"><span>画面对比度 (Contrast):</span><input type="number" id="contrast-val" class="value-display" step="0.001" value="1.000"></div>
-                <input type="range" id="contrast-slider" min="0.000" max="2.000" step="0.001" value="1.000">
+            <div class="control-group" style="flex-direction: row; justify-content: space-between; align-items: center;">
+                <div style="color: #c8b6ff; font-size: 12px; font-weight: bold;">🎨 色彩调优 (Color Grading)</div>
             </div>
+
+            <div class="control-group">
+                <div class="control-label"><span style="color:#c8b6ff;">整体曝光度 (Exposure):</span><input type="number" id="exposure-val" class="value-display" style="color:#c8b6ff;" step="0.001" value="1.000"></div>
+                <input type="range" id="exposure-slider" min="0.000" max="3.000" step="0.001" value="1.000" style="accent-color: #c8b6ff;">
+            </div>
+            <div class="control-group">
+                <div class="control-label"><span style="color:#c8b6ff;">画面对比度 (Contrast):</span><input type="number" id="contrast-val" class="value-display" style="color:#c8b6ff;" step="0.001" value="1.000"></div>
+                <input type="range" id="contrast-slider" min="0.000" max="2.000" step="0.001" value="1.000" style="accent-color: #c8b6ff;">
+            </div>
+            <div class="control-group">
+                <div class="control-label"><span style="color:#c8b6ff;">冷暖色温 (Temperature):</span><input type="number" id="temp-val" class="value-display" style="color:#c8b6ff;" step="0.001" value="0.000"></div>
+                <input type="range" id="temp-slider" min="-1.000" max="1.000" step="0.001" value="0.000" style="accent-color: #c8b6ff;">
+            </div>
+
+            <div class="control-group" style="background: rgba(0,0,0,0.4); padding: 10px; border-radius: 6px; border: 1px solid #14213d; margin-top: 12px;">
+                <div class="control-label" style="margin-bottom: 8px;">
+                    <span style="color:#c8b6ff; font-weight: bold;">📈 RGB 曲线 (Curves)</span>
+                    <select id="curve-channel" style="background:#14213d; color:#00e5ff; border:1px solid #005f73; border-radius:4px; padding:2px 4px; outline:none; font-size:11px; cursor:pointer;">
+                        <option value="master">RGB (整体)</option>
+                        <option value="r">Red (红)</option>
+                        <option value="g">Green (绿)</option>
+                        <option value="b">Blue (蓝)</option>
+                    </select>
+                </div>
+                <canvas id="curve-canvas" width="256" height="150" style="background:#0a101a; border:1px solid #005f73; border-radius:4px; cursor:crosshair; width: 100%; height: 150px; display:block;"></canvas>
+                <div style="font-size: 10px; color: #64dfdf; margin-top: 6px; text-align: center; opacity: 0.7;">
+                    点击连线添加点 | 拖拽调整 | 双击节点删除
+                </div>
+            </div>
+
+            <div class="divider"></div>
 
             <div class="control-group">
                 <div class="control-label"><span>辉光溢出强度 (Bloom):</span><input type="number" id="strength-val" class="value-display" step="0.001" value="0.000"></div>
@@ -256,7 +224,7 @@
             <div class="divider"></div>
 
             <div class="control-group" style="flex-direction: row; justify-content: space-between; align-items: center;">
-                <div style="color: #bde0fe; font-size: 12px; font-weight: bold;">📷 相机视图 (Camera View)[cite: 6]</div>
+                <div style="color: #bde0fe; font-size: 12px; font-weight: bold;">📷 相机视图 (Camera View)</div>
             </div>
 
             <div class="control-group">
@@ -275,18 +243,13 @@
             <div class="divider"></div>
 
             <div class="control-group">
-                <button id="export-code-btn" class="action-btn">📤 导出当前完整代码 (Export Current Code) (.js)[cite: 6]</button>
+                <button id="export-code-btn" class="action-btn">📤 导出当前完整代码 (Export Code) (.js)</button>
             </div>
             <div class="control-group" style="flex-direction: row; gap: 8px; margin-top: 8px;">
-                <button id="export-params-btn" class="action-btn secondary">💾 导出参数 (Export Parameters) (JSON)[cite: 6]</button>
-                <button id="import-params-btn" class="action-btn secondary">📂 导入参数 (Import Parameters)[cite: 6]</button>
+                <button id="export-params-btn" class="action-btn secondary">💾 导出参数 (JSON)</button>
+                <button id="import-params-btn" class="action-btn secondary">📂 导入参数 (JSON)</button>
             </div>
             <input type="file" id="param-import-input" accept=".json" style="display:none;">
-
-            <div class="status-box">
-               Enjoy.<br>
-                :)
-            </div>
         </div> 
     </div>
 
@@ -303,13 +266,42 @@
         import { Reflector } from 'three/addons/objects/Reflector.js';
         import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
-        const ContrastShader = {
+        // 1. 生成曲线用的 LUT，加入正确的过滤参数使 Shader 能正确采样
+        const lutData = new Uint8Array(256 * 4);
+        const lutTexture = new THREE.DataTexture(lutData, 256, 1, THREE.RGBAFormat);
+        lutTexture.minFilter = THREE.LinearFilter;
+        lutTexture.magFilter = THREE.LinearFilter;
+        lutTexture.generateMipmaps = false;
+        lutTexture.needsUpdate = true;
+
+        const ColorGradingShader = {
             uniforms: {
                 "tDiffuse": { value: null },
-                "contrast": { value: 1.0 }
+                "tCurve": { value: null }, // 初始化为空，稍后手动绑定保证引用
+                "contrast": { value: 1.0 },
+                "temperature": { value: 0.0 }
             },
             vertexShader: `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
-            fragmentShader: `varying vec2 vUv; uniform sampler2D tDiffuse; uniform float contrast; void main() { vec4 color = texture2D(tDiffuse, vUv); color.rgb = (color.rgb - 0.5) * contrast + 0.5; gl_FragColor = color; }`
+            fragmentShader: `
+                varying vec2 vUv; 
+                uniform sampler2D tDiffuse; 
+                uniform sampler2D tCurve; 
+                uniform float contrast; 
+                uniform float temperature;
+                void main() { 
+                    vec4 color = texture2D(tDiffuse, vUv); 
+                    
+                    color.rgb = (color.rgb - 0.5) * contrast + 0.5; 
+                    color.r += temperature * 0.15;
+                    color.b -= temperature * 0.15;
+                    
+                    color.rgb = clamp(color.rgb, 0.0, 1.0);
+                    color.r = texture2D(tCurve, vec2(color.r, 0.5)).r;
+                    color.g = texture2D(tCurve, vec2(color.g, 0.5)).g;
+                    color.b = texture2D(tCurve, vec2(color.b, 0.5)).b;
+                    
+                    gl_FragColor = color; 
+                }`
         };
 
         const scene = new THREE.Scene();
@@ -320,7 +312,6 @@
             multiplier: document.getElementById('emission-multiplier'),
             lightInt: document.getElementById('light-intensity'),
             ambient: document.getElementById('ambient-intensity'),
-            contrast: document.getElementById('contrast-slider'),
             strength: document.getElementById('bloom-strength'),
             threshold: document.getElementById('bloom-threshold'),
             radius: document.getElementById('bloom-radius'),
@@ -330,11 +321,13 @@
             reflectorY: document.getElementById('reflector-y-slider'),
             reflectorBlur: document.getElementById('reflector-blur-slider'), 
             reflectorIntensity: document.getElementById('reflector-intensity-slider'), 
-            exposure: document.getElementById('exposure-slider'),
             lightMultiplier: document.getElementById('light-multiplier-slider'),
             focalLength: document.getElementById('focal-length-slider'),
             clipStart: document.getElementById('clip-start-slider'),
-            clipEnd: document.getElementById('clip-end-slider')
+            clipEnd: document.getElementById('clip-end-slider'),
+            exposure: document.getElementById('exposure-slider'),
+            contrast: document.getElementById('contrast-slider'),
+            temperature: document.getElementById('temp-slider')
         };
         
         const displays = {
@@ -342,18 +335,19 @@
             multiplier: document.getElementById('multiplier-val'),
             lightInt: document.getElementById('light-int-val'),
             ambient: document.getElementById('ambient-val'),
-            contrast: document.getElementById('contrast-val'),
             strength: document.getElementById('strength-val'),
             threshold: document.getElementById('threshold-val'),
             radius: document.getElementById('radius-val'),
             reflectorY: document.getElementById('reflector-y-val'),
             reflectorBlur: document.getElementById('reflector-blur-val'), 
             reflectorIntensity: document.getElementById('reflector-intensity-val'), 
-            exposure: document.getElementById('exposure-val'),
             lightMultiplier: document.getElementById('light-multiplier-val'),
             focalLength: document.getElementById('focal-length-val'),
             clipStart: document.getElementById('clip-start-val'),
-            clipEnd: document.getElementById('clip-end-val')
+            clipEnd: document.getElementById('clip-end-val'),
+            exposure: document.getElementById('exposure-val'),
+            contrast: document.getElementById('contrast-val'),
+            temperature: document.getElementById('temp-val')
         };
 
         const overlay = document.getElementById('loading-overlay');
@@ -364,569 +358,405 @@
         const uiContainer = document.getElementById('ui-container');
         const minimizeBtn = document.getElementById('minimize-btn');
         let isMinimized = uiContainer.classList.contains('minimized');
-        minimizeBtn.textContent = isMinimized ? '＋' : '−';
-
         minimizeBtn.addEventListener('click', () => {
             isMinimized = !isMinimized;
-            if (isMinimized) {
-                uiContainer.classList.add('minimized');
-                minimizeBtn.textContent = '＋';
-            } else {
-                uiContainer.classList.remove('minimized');
-                minimizeBtn.textContent = '−';
-            }
+            uiContainer.classList.toggle('minimized', isMinimized);
+            minimizeBtn.textContent = isMinimized ? '＋' : '−';
         });
 
         const ambientLight = new THREE.AmbientLight(0xffffff, Number(inputs.ambient.value));
         scene.add(ambientLight);
-
         const bounceLight = new THREE.PointLight(0x00aaff, Number(inputs.lightInt.value), 500); 
-        bounceLight.position.set(0, 10, 0);
-        scene.add(bounceLight);
+        bounceLight.position.set(0, 10, 0); scene.add(bounceLight);
 
         const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 10000);
-        camera.setFocalLength(50);
-        camera.position.set(-32.85226741771379, 58.836790708792314, 82.48901799352326);
+        camera.setFocalLength(50); camera.position.set(-32.85, 58.83, 82.48);
 
-        // 开启对数深度缓冲 (logarithmicDepthBuffer) 解决大场景深度冲突
         const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: "high-performance", logarithmicDepthBuffer: true });
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.outputColorSpace = THREE.SRGBColorSpace; 
-        renderer.toneMapping = THREE.AgXToneMapping; 
+        renderer.toneMapping = THREE.ACESFilmicToneMapping; 
         renderer.toneMappingExposure = Number(inputs.exposure.value);
 
-        // DEFAULT HDRI 
         const pmremGenerator = new THREE.PMREMGenerator(renderer);
         const defaultEnvironment = pmremGenerator.fromScene(new RoomEnvironment(), 0.04).texture;
         
         let exrTexture = null;
         function updateEnvironment() {
             if (exrTexture) {
-                scene.environment = exrTexture;
-                scene.background = inputs.exrToggle.checked ? exrTexture : new THREE.Color(0x000000);
+                scene.environment = exrTexture; scene.background = inputs.exrToggle.checked ? exrTexture : new THREE.Color(0x000000);
             } else {
-                scene.environment = inputs.defaultHdriToggle.checked ? defaultEnvironment : null;
-                scene.background = new THREE.Color(0x000000); 
+                scene.environment = inputs.defaultHdriToggle.checked ? defaultEnvironment : null; scene.background = new THREE.Color(0x000000); 
             }
         }
         updateEnvironment();
-        
-        const canvasContainer = document.getElementById('canvas-container');
-        canvasContainer.innerHTML = '';
-        canvasContainer.appendChild(renderer.domElement);
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
 
         const composer = new EffectComposer(renderer);
         composer.addPass(new RenderPass(scene, camera));
         
-        const bloomPass = new UnrealBloomPass(
-            new THREE.Vector2(window.innerWidth, window.innerHeight), 
-            Number(inputs.strength.value), 
-            Number(inputs.radius.value), 
-            Number(inputs.threshold.value)
-        );
+        const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), Number(inputs.strength.value), Number(inputs.radius.value), Number(inputs.threshold.value));
         composer.addPass(bloomPass);
 
-        const contrastPass = new ShaderPass(ContrastShader);
-        contrastPass.uniforms["contrast"].value = Number(inputs.contrast.value);
-        composer.addPass(contrastPass);
+        const colorGradingPass = new ShaderPass(ColorGradingShader);
+        colorGradingPass.uniforms["tCurve"].value = lutTexture; // 强制绑定 LUT
+        colorGradingPass.uniforms["contrast"].value = Number(inputs.contrast.value);
+        colorGradingPass.uniforms["temperature"].value = Number(inputs.temperature.value);
+        composer.addPass(colorGradingPass);
         
         composer.addPass(new OutputPass());
 
         const controls = new MapControls(camera, renderer.domElement);
-        controls.target.set(25.13661167138972, 6.938076201442838e-58, 4.435872647892313);
-        controls.enableDamping = true;
-        controls.dampingFactor = 0.05;
-        controls.maxPolarAngle = Math.PI / 2 - 0.05;
-        controls.update();
+        controls.target.set(25.13, 0, 4.43); controls.enableDamping = true; controls.dampingFactor = 0.05;
+        controls.maxPolarAngle = Math.PI / 2 - 0.05; controls.update();
 
-        let currentModel = null;
-        let groundReflector = null; 
-        let baseReflectorY = 0;     
+        let currentModel = null, groundReflector = null, baseReflectorY = 0;     
+        const gltfLoader = new GLTFLoader(); const exrLoader = new EXRLoader();
 
-        const gltfLoader = new GLTFLoader();
-        const exrLoader = new EXRLoader();
+        function showProgress(title) { titleText.textContent = title; progressBar.style.width = '0%'; progressText.textContent = '0%'; overlay.classList.add('active'); }
+        function updateProgress(xhr) {
+            if (xhr.total > 0) { const percent = Math.round((xhr.loaded / xhr.total) * 100); progressBar.style.width = percent + '%'; progressText.textContent = percent + '%'; } 
+            else progressText.textContent = (xhr.loaded / 1024 / 1024).toFixed(1) + ' MB Loaded';
+        }
+        function hideProgress() { overlay.classList.remove('active'); }
 
-        function showProgress(title) {
-            titleText.textContent = title;
-            progressBar.style.width = '0%';
-            progressText.textContent = '0%';
-            overlay.classList.add('active');
+        // ========================== 曲线编辑器逻辑 开始 ==========================
+        const curveCanvas = document.getElementById('curve-canvas');
+        const ctx = curveCanvas.getContext('2d');
+        const channelSelect = document.getElementById('curve-channel');
+        
+        let curveData = {
+            master: [[0, 0], [1, 1]],
+            r: [[0, 0], [1, 1]],
+            g: [[0, 0], [1, 1]],
+            b: [[0, 0], [1, 1]]
+        };
+        const curveColors = { master: '#ffffff', r: '#ff4d4d', g: '#52b788', b: '#00e5ff' };
+        let activeChannel = 'master';
+        let draggedPoint = null;
+
+        channelSelect.addEventListener('change', (e) => { activeChannel = e.target.value; drawCurve(); });
+
+        // 平滑的 三次埃尔米特样条插值 (Cubic Hermite Spline / 1D Catmull-Rom)
+        function evaluateCurveSmooth(x, pts) {
+            if (pts.length === 0) return x;
+            if (pts.length === 1) return pts[0][1];
+            if (x <= pts[0][0]) return pts[0][1];
+            if (x >= pts[pts.length - 1][0]) return pts[pts.length - 1][1];
+
+            let i = 0;
+            for (; i < pts.length - 1; i++) { if (x >= pts[i][0] && x <= pts[i+1][0]) break; }
+            
+            const p0 = i > 0 ? pts[i-1] : pts[0];
+            const p1 = pts[i];
+            const p2 = pts[i+1];
+            const p3 = i < pts.length - 2 ? pts[i+2] : pts[pts.length-1];
+
+            const dx = p2[0] - p1[0];
+            if (dx <= 0) return p1[1]; // 防止共点除零崩溃
+
+            // 估算切线斜率
+            const m1 = (i === 0) ? (p2[1] - p1[1]) / dx : (p2[1] - p0[1]) / (p2[0] - p0[0]);
+            const m2 = (i === pts.length - 2) ? (p2[1] - p1[1]) / dx : (p3[1] - p1[1]) / (p3[0] - p1[0]);
+
+            const t = (x - p1[0]) / dx;
+            const t2 = t * t;
+            const t3 = t2 * t;
+
+            // 基函数
+            const h00 = 2*t3 - 3*t2 + 1;
+            const h10 = t3 - 2*t2 + t;
+            const h01 = -2*t3 + 3*t2;
+            const h11 = t3 - t2;
+
+            return h00 * p1[1] + h10 * m1 * dx + h01 * p2[1] + h11 * m2 * dx;
         }
 
-        function updateProgress(xhr) {
-            if (xhr.total > 0) {
-                const percent = Math.round((xhr.loaded / xhr.total) * 100);
-                progressBar.style.width = percent + '%';
-                progressText.textContent = percent + '%';
-            } else {
-                progressText.textContent = (xhr.loaded / 1024 / 1024).toFixed(1) + ' MB Loaded';
+        function updateLUT() {
+            for (let i = 0; i < 256; i++) {
+                const x = i / 255;
+                let r = evaluateCurveSmooth(x, curveData.r);
+                let g = evaluateCurveSmooth(x, curveData.g);
+                let b = evaluateCurveSmooth(x, curveData.b);
+                
+                r = evaluateCurveSmooth(r, curveData.master);
+                g = evaluateCurveSmooth(g, curveData.master);
+                b = evaluateCurveSmooth(b, curveData.master);
+                
+                lutData[i * 4] = Math.min(255, Math.max(0, r * 255));
+                lutData[i * 4 + 1] = Math.min(255, Math.max(0, g * 255));
+                lutData[i * 4 + 2] = Math.min(255, Math.max(0, b * 255));
+                lutData[i * 4 + 3] = 255;
+            }
+            lutTexture.needsUpdate = true;
+            drawCurve();
+        }
+
+        function drawCurve() {
+            const w = curveCanvas.width, h = curveCanvas.height;
+            ctx.clearRect(0, 0, w, h);
+            
+            ctx.strokeStyle = '#14213d'; ctx.lineWidth = 1;
+            ctx.beginPath();
+            for (let i = 1; i < 4; i++) {
+                ctx.moveTo(w * (i/4), 0); ctx.lineTo(w * (i/4), h);
+                ctx.moveTo(0, h * (i/4)); ctx.lineTo(w, h * (i/4));
+            }
+            ctx.stroke();
+
+            const pts = curveData[activeChannel];
+            ctx.strokeStyle = curveColors[activeChannel]; ctx.lineWidth = 2;
+            ctx.beginPath();
+            
+            // 细分采样绘制平滑曲线
+            for (let px = 0; px <= w; px++) {
+                const x = px / w;
+                const y = evaluateCurveSmooth(x, pts);
+                const canvasY = (1 - y) * h;
+                if (px === 0) ctx.moveTo(px, canvasY);
+                else ctx.lineTo(px, canvasY);
+            }
+            ctx.stroke();
+
+            ctx.fillStyle = '#0a101a';
+            for (let i = 0; i < pts.length; i++) {
+                const x = pts[i][0] * w, y = (1 - pts[i][1]) * h;
+                ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2);
+                ctx.fill(); ctx.stroke();
             }
         }
 
-        function hideProgress() {
-            overlay.classList.remove('active');
+        function getMousePos(e) {
+            const rect = curveCanvas.getBoundingClientRect();
+            return { x: (e.clientX - rect.left) / rect.width, y: 1 - ((e.clientY - rect.top) / rect.height) };
         }
 
-        document.getElementById('file-input').addEventListener('change', function(event) {
-            const file = event.target.files[0];
-            if (!file) return;
+        curveCanvas.addEventListener('mousedown', (e) => {
+            const pos = getMousePos(e); const pts = curveData[activeChannel];
+            for (let i = 0; i < pts.length; i++) {
+                if (Math.abs(pts[i][0] - pos.x) < 0.05 && Math.abs(pts[i][1] - pos.y) < 0.05) {
+                    draggedPoint = { index: i, array: pts }; return;
+                }
+            }
+            pts.push([pos.x, pos.y]);
+            pts.sort((a, b) => a[0] - b[0]);
+            draggedPoint = { index: pts.findIndex(p => p[0] === pos.x && p[1] === pos.y), array: pts };
+            updateLUT();
+        });
 
+        window.addEventListener('mousemove', (e) => {
+            if (!draggedPoint) return;
+            const pos = getMousePos(e);
+            const { index, array } = draggedPoint;
+            let minX = (index > 0) ? array[index - 1][0] + 0.01 : 0;
+            let maxX = (index < array.length - 1) ? array[index + 1][0] - 0.01 : 1;
+            array[index][0] = Math.max(minX, Math.min(maxX, pos.x));
+            array[index][1] = Math.max(0, Math.min(1, pos.y));
+            if (index === 0) array[index][0] = 0;
+            if (index === array.length - 1) array[index][0] = 1;
+            updateLUT();
+        });
+
+        window.addEventListener('mouseup', () => { draggedPoint = null; });
+
+        curveCanvas.addEventListener('dblclick', (e) => {
+            const pos = getMousePos(e); const pts = curveData[activeChannel];
+            for (let i = 1; i < pts.length - 1; i++) { 
+                if (Math.abs(pts[i][0] - pos.x) < 0.05 && Math.abs(pts[i][1] - pos.y) < 0.05) {
+                    pts.splice(i, 1); updateLUT(); return;
+                }
+            }
+        });
+        
+        updateLUT();
+        // ========================== 曲线编辑器逻辑 结束 ==========================
+
+        document.getElementById('file-input').addEventListener('change', function(event) {
+            const file = event.target.files[0]; if (!file) return;
             document.getElementById('file-input').style.display = 'none';
             document.getElementById('model-file-name').textContent = file.name;
             document.getElementById('model-file-container').classList.add('active');
-
             const url = URL.createObjectURL(file);
             showProgress("⚡ 正在解析并构建三维模型资产 Loading...");
 
             gltfLoader.load(url, function(gltf) {
                 if (currentModel) scene.remove(currentModel);
                 currentModel = gltf.scene;
-                
                 const currentEnvIntensity = Number(inputs.envIntensity.value);
-
                 currentModel.traverse((node) => {
                     if (node.isMesh && node.material) {
                         const mats = Array.isArray(node.material) ? node.material : [node.material];
                         mats.forEach(mat => {
-                            if (mat.emissive !== undefined) {
-                                node.userData.baseEmissiveIntensity = mat.emissiveIntensity || 0;
-                            }
+                            if (mat.emissive !== undefined) node.userData.baseEmissiveIntensity = mat.emissiveIntensity || 0;
                             mat.envMapIntensity = currentEnvIntensity;
                         });
                     }
-                    if (node.isLight) {
-                        node.userData.baseIntensity = node.intensity;
-                    }
+                    if (node.isLight) node.userData.baseIntensity = node.intensity;
                 });
 
                 const box = new THREE.Box3().setFromObject(currentModel);
-                const size = box.getSize(new THREE.Vector3());
-                const center = box.getCenter(new THREE.Vector3());
-                const maxDim = Math.max(size.x, size.y, size.z);
-                
+                const size = box.getSize(new THREE.Vector3()); const center = box.getCenter(new THREE.Vector3()); const maxDim = Math.max(size.x, size.y, size.z);
                 currentModel.position.sub(center); 
-                bounceLight.position.set(0, maxDim * 0.1, 0); 
-                bounceLight.distance = maxDim * 1.5;
+                bounceLight.position.set(0, maxDim * 0.1, 0); bounceLight.distance = maxDim * 1.5;
+                camera.position.set(0, maxDim * 0.5, maxDim * 1.5); camera.lookAt(0, 0, 0); controls.target.set(0, 0, 0);
+                controls.minDistance = 0.0001; controls.maxDistance = maxDim * 10.0;
                 
-                camera.position.set(0, maxDim * 0.5, maxDim * 1.5);
-                camera.lookAt(0, 0, 0);
-                controls.target.set(0, 0, 0);
+                camera.near = Number(inputs.clipStart.value); camera.far = Number(inputs.clipEnd.value); camera.updateProjectionMatrix(); controls.update();
 
-                controls.minDistance = 0.0001;
-                controls.maxDistance = maxDim * 10.0;
-                
-                // 应用UI上的裁剪面设置，而不是强制缩小
-                camera.near = Number(inputs.clipStart.value);
-                camera.far = Number(inputs.clipEnd.value);
-                camera.updateProjectionMatrix();
-                
-                controls.update();
-
-                if (groundReflector) {
-                    scene.remove(groundReflector);
-                    groundReflector.dispose();
-                }
-
+                if (groundReflector) { scene.remove(groundReflector); groundReflector.dispose(); }
                 const refGeometry = new THREE.PlaneGeometry(maxDim * 6, maxDim * 6, 32, 32);
-                groundReflector = new Reflector(refGeometry, {
-                    clipBias: 0.003,
-                    textureWidth: 512, 
-                    textureHeight: 512,
-                    color: 0x1a2436
-                });
-
-                groundReflector.material.transparent = true;
-                groundReflector.material.blending = THREE.AdditiveBlending;
-                groundReflector.material.depthWrite = false; 
-
+                groundReflector = new Reflector(refGeometry, { clipBias: 0.003, textureWidth: 512, textureHeight: 512, color: 0x1a2436 });
+                groundReflector.material.transparent = true; groundReflector.material.blending = THREE.AdditiveBlending; groundReflector.material.depthWrite = false; 
                 groundReflector.material.fragmentShader = `
-                    uniform sampler2D tDiffuse;
-                    uniform vec3 color;
-                    uniform float blurSize;
-                    uniform float intensity; 
-                    varying vec4 vUv;
+                    uniform sampler2D tDiffuse; uniform vec3 color; uniform float blurSize; uniform float intensity; varying vec4 vUv;
                     void main() {
                         vec4 base = vec4(0.0);
                         for(int i = 0; i < 48; i++) {
-                            float f_i = float(i);
-                            float r = sqrt(f_i + 0.5) / sqrt(48.0);
-                            float theta = f_i * 2.39996323; 
+                            float f_i = float(i); float r = sqrt(f_i + 0.5) / sqrt(48.0); float theta = f_i * 2.39996323; 
                             vec2 offset = vec2(cos(theta), sin(theta)) * r;
-                            
-                            vec4 uv = vUv;
-                            uv.x += offset.x * blurSize * vUv.w;
-                            uv.y += offset.y * blurSize * vUv.w;
-                            
+                            vec4 uv = vUv; uv.x += offset.x * blurSize * vUv.w; uv.y += offset.y * blurSize * vUv.w;
                             base += texture2DProj(tDiffuse, uv);
                         }
-                        base /= 48.0;
-                        gl_FragColor = vec4( base.rgb * color * intensity, 1.0 );
+                        base /= 48.0; gl_FragColor = vec4( base.rgb * color * intensity, 1.0 );
                         #include <tonemapping_fragment>
                         #include <colorspace_fragment>
                     }
                 `;
-                
                 groundReflector.material.uniforms.blurSize = { value: Number(inputs.reflectorBlur.value) * 0.005 };
                 groundReflector.material.uniforms.intensity = { value: Number(inputs.reflectorIntensity.value) }; 
-
-                baseReflectorY = -size.y / 2;
-                groundReflector.position.y = baseReflectorY + Number(inputs.reflectorY.value);
-                groundReflector.rotateX(-Math.PI / 2);
-                groundReflector.visible = inputs.reflectorToggle.checked;
-                scene.add(groundReflector);
-
-                scene.add(currentModel);
-                URL.revokeObjectURL(url);
-                
-                hideProgress();
-            }, function(xhr) {
-                updateProgress(xhr);
-            }, function(error) {
-                console.error(error);
-                hideProgress();
-                alert("❌ GLB 模型解析发生异常。");
-            });
+                baseReflectorY = -size.y / 2; groundReflector.position.y = baseReflectorY + Number(inputs.reflectorY.value); groundReflector.rotateX(-Math.PI / 2);
+                groundReflector.visible = inputs.reflectorToggle.checked; scene.add(groundReflector);
+                scene.add(currentModel); URL.revokeObjectURL(url); hideProgress();
+            }, updateProgress, error => { console.error(error); hideProgress(); alert("❌ 模型解析异常。"); });
         });
 
         document.getElementById('model-delete-btn').addEventListener('click', function() {
-            if (currentModel) {
-                scene.remove(currentModel);
-                currentModel = null;
-            }
-            if (groundReflector) {
-                scene.remove(groundReflector);
-                groundReflector.dispose();
-                groundReflector = null;
-            }
-            document.getElementById('file-input').value = '';
-            document.getElementById('file-input').style.display = 'block';
+            if (currentModel) { scene.remove(currentModel); currentModel = null; }
+            if (groundReflector) { scene.remove(groundReflector); groundReflector.dispose(); groundReflector = null; }
+            document.getElementById('file-input').value = ''; document.getElementById('file-input').style.display = 'block';
             document.getElementById('model-file-container').classList.remove('active');
         });
 
         document.getElementById('exr-input').addEventListener('change', function(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            document.getElementById('exr-input').style.display = 'none';
-            document.getElementById('exr-file-name').textContent = file.name;
-            document.getElementById('exr-file-container').classList.add('active');
-
-            const url = URL.createObjectURL(file);
-            showProgress("🌌 正在读取并解压 EXR 高动态范围贴图...");
-
+            const file = event.target.files[0]; if (!file) return;
+            document.getElementById('exr-input').style.display = 'none'; document.getElementById('exr-file-name').textContent = file.name;
+            document.getElementById('exr-file-container').classList.add('active'); const url = URL.createObjectURL(file);
+            showProgress("🌌 正在读取并解压 EXR 贴图...");
             exrLoader.load(url, function(texture) {
-                texture.mapping = THREE.EquirectangularReflectionMapping;
-                exrTexture = texture;
-                updateEnvironment();
-                URL.revokeObjectURL(url);
-                hideProgress();
-            }, function(xhr) {
-                updateProgress(xhr);
-            }, function(error) {
-                console.error(error);
-                hideProgress();
-                alert("❌ EXR 读取失败。");
-            });
+                texture.mapping = THREE.EquirectangularReflectionMapping; exrTexture = texture;
+                updateEnvironment(); URL.revokeObjectURL(url); hideProgress();
+            }, updateProgress, error => { console.error(error); hideProgress(); alert("❌ EXR 读取失败。"); });
         });
 
         document.getElementById('exr-delete-btn').addEventListener('click', function() {
-            exrTexture = null;
-            updateEnvironment(); 
-            
-            document.getElementById('exr-input').value = '';
-            document.getElementById('exr-input').style.display = 'block';
-            document.getElementById('exr-file-container').classList.remove('active');
+            exrTexture = null; updateEnvironment(); 
+            document.getElementById('exr-input').value = ''; document.getElementById('exr-input').style.display = 'block'; document.getElementById('exr-file-container').classList.remove('active');
         });
 
         inputs.exrToggle.addEventListener('change', updateEnvironment);
         inputs.defaultHdriToggle.addEventListener('change', updateEnvironment);
 
         inputs.envIntensity.addEventListener('input', (e) => {
-            const val = Number(e.target.value);
-            if (document.activeElement !== displays.envIntensity) displays.envIntensity.value = val.toFixed(3);
-            if (currentModel) {
-                currentModel.traverse((node) => {
-                    if (node.isMesh && node.material) {
-                        const mats = Array.isArray(node.material) ? node.material : [node.material];
-                        mats.forEach(mat => {
-                            mat.envMapIntensity = val;
-                        });
-                    }
-                });
-            }
+            const val = Number(e.target.value); if (document.activeElement !== displays.envIntensity) displays.envIntensity.value = val.toFixed(3);
+            if (currentModel) currentModel.traverse((node) => { if (node.isMesh && node.material) { const mats = Array.isArray(node.material) ? node.material : [node.material]; mats.forEach(mat => { mat.envMapIntensity = val; }); } });
         });
+        inputs.reflectorToggle.addEventListener('change', (e) => { if (groundReflector) groundReflector.visible = e.target.checked; });
+        inputs.reflectorY.addEventListener('input', (e) => { const val = Number(e.target.value); if (document.activeElement !== displays.reflectorY) displays.reflectorY.value = val.toFixed(3); if (groundReflector) groundReflector.position.y = baseReflectorY + val; });
+        inputs.reflectorBlur.addEventListener('input', (e) => { const val = Number(e.target.value); if (document.activeElement !== displays.reflectorBlur) displays.reflectorBlur.value = val.toFixed(3); if (groundReflector) groundReflector.material.uniforms.blurSize.value = val * 0.005; });
+        inputs.reflectorIntensity.addEventListener('input', (e) => { const val = Number(e.target.value); if (document.activeElement !== displays.reflectorIntensity) displays.reflectorIntensity.value = val.toFixed(3); if (groundReflector) groundReflector.material.uniforms.intensity.value = val; });
+        inputs.lightMultiplier.addEventListener('input', (e) => { const val = Number(e.target.value); if (document.activeElement !== displays.lightMultiplier) displays.lightMultiplier.value = val.toFixed(3); });
+        inputs.multiplier.addEventListener('input', (e) => { const val = Number(e.target.value); if (document.activeElement !== displays.multiplier) displays.multiplier.value = val.toFixed(3); });
+        inputs.lightInt.addEventListener('input', (e) => { const val = Number(e.target.value); if (document.activeElement !== displays.lightInt) displays.lightInt.value = val.toFixed(3); bounceLight.intensity = val; });
+        inputs.ambient.addEventListener('input', (e) => { const val = Number(e.target.value); if (document.activeElement !== displays.ambient) displays.ambient.value = val.toFixed(3); ambientLight.intensity = val; });
+        inputs.strength.addEventListener('input', (e) => { const val = Number(e.target.value); if (document.activeElement !== displays.strength) displays.strength.value = val.toFixed(3); bloomPass.strength = val; });
+        inputs.threshold.addEventListener('input', (e) => { const val = Number(e.target.value); if (document.activeElement !== displays.threshold) displays.threshold.value = val.toFixed(3); bloomPass.threshold = val; });
+        inputs.radius.addEventListener('input', (e) => { const val = Number(e.target.value); if (document.activeElement !== displays.radius) displays.radius.value = val.toFixed(3); bloomPass.radius = val; });
+        inputs.focalLength.addEventListener('input', (e) => { const val = Number(e.target.value); if (document.activeElement !== displays.focalLength) displays.focalLength.value = val; camera.setFocalLength(val); });
+        inputs.clipStart.addEventListener('input', (e) => { const val = Number(e.target.value); if (document.activeElement !== displays.clipStart) displays.clipStart.value = val.toFixed(3); camera.near = val; camera.updateProjectionMatrix(); });
+        inputs.clipEnd.addEventListener('input', (e) => { const val = Number(e.target.value); if (document.activeElement !== displays.clipEnd) displays.clipEnd.value = val; camera.far = val; camera.updateProjectionMatrix(); });
 
-        inputs.reflectorToggle.addEventListener('change', function(e) {
-            if (groundReflector) groundReflector.visible = e.target.checked;
-        });
-
-        inputs.reflectorY.addEventListener('input', (e) => {
-            const val = Number(e.target.value);
-            if (document.activeElement !== displays.reflectorY) displays.reflectorY.value = val.toFixed(3);
-            if (groundReflector) groundReflector.position.y = baseReflectorY + val;
-        });
-        
-        inputs.reflectorBlur.addEventListener('input', (e) => {
-            const val = Number(e.target.value);
-            if (document.activeElement !== displays.reflectorBlur) displays.reflectorBlur.value = val.toFixed(3);
-            if (groundReflector) groundReflector.material.uniforms.blurSize.value = val * 0.005;
-        });
-
-        inputs.reflectorIntensity.addEventListener('input', (e) => {
-            const val = Number(e.target.value);
-            if (document.activeElement !== displays.reflectorIntensity) displays.reflectorIntensity.value = val.toFixed(3);
-            if (groundReflector) groundReflector.material.uniforms.intensity.value = val;
-        });
-
-        inputs.exposure.addEventListener('input', (e) => {
-            const val = Number(e.target.value);
-            if (document.activeElement !== displays.exposure) displays.exposure.value = val.toFixed(3);
-            renderer.toneMappingExposure = val; 
-        });
-
-        inputs.lightMultiplier.addEventListener('input', (e) => {
-            const val = Number(e.target.value);
-            if (document.activeElement !== displays.lightMultiplier) displays.lightMultiplier.value = val.toFixed(3);
-        });
-
-        inputs.multiplier.addEventListener('input', (e) => { 
-            const val = Number(e.target.value);
-            if (document.activeElement !== displays.multiplier) displays.multiplier.value = val.toFixed(3); 
-        });
-        inputs.lightInt.addEventListener('input', (e) => { 
-            const val = Number(e.target.value); 
-            if (document.activeElement !== displays.lightInt) displays.lightInt.value = val.toFixed(3); 
-            bounceLight.intensity = val; 
-        });
-        inputs.ambient.addEventListener('input', (e) => { 
-            const val = Number(e.target.value); 
-            if (document.activeElement !== displays.ambient) displays.ambient.value = val.toFixed(3); 
-            ambientLight.intensity = val; 
-        });
-        inputs.contrast.addEventListener('input', (e) => { 
-            const val = Number(e.target.value); 
-            if (document.activeElement !== displays.contrast) displays.contrast.value = val.toFixed(3); 
-            contrastPass.uniforms["contrast"].value = val; 
-        });
-        inputs.strength.addEventListener('input', (e) => { 
-            const val = Number(e.target.value); 
-            if (document.activeElement !== displays.strength) displays.strength.value = val.toFixed(3); 
-            bloomPass.strength = val; 
-        });
-        inputs.threshold.addEventListener('input', (e) => { 
-            const val = Number(e.target.value); 
-            if (document.activeElement !== displays.threshold) displays.threshold.value = val.toFixed(3); 
-            bloomPass.threshold = val; 
-        });
-        inputs.radius.addEventListener('input', (e) => { 
-            const val = Number(e.target.value); 
-            if (document.activeElement !== displays.radius) displays.radius.value = val.toFixed(3); 
-            bloomPass.radius = val; 
-        });
-
-        inputs.focalLength.addEventListener('input', (e) => {
-            const val = Number(e.target.value);
-            if (document.activeElement !== displays.focalLength) displays.focalLength.value = val;
-            camera.setFocalLength(val); 
-        });
-
-        inputs.clipStart.addEventListener('input', (e) => {
-            const val = Number(e.target.value);
-            if (document.activeElement !== displays.clipStart) displays.clipStart.value = val.toFixed(3);
-            camera.near = val;
-            camera.updateProjectionMatrix();
-        });
-
-        inputs.clipEnd.addEventListener('input', (e) => {
-            const val = Number(e.target.value);
-            if (document.activeElement !== displays.clipEnd) displays.clipEnd.value = val;
-            camera.far = val;
-            camera.updateProjectionMatrix();
-        });
+        inputs.exposure.addEventListener('input', (e) => { const val = Number(e.target.value); if (document.activeElement !== displays.exposure) displays.exposure.value = val.toFixed(3); renderer.toneMappingExposure = val; });
+        inputs.contrast.addEventListener('input', (e) => { const val = Number(e.target.value); if (document.activeElement !== displays.contrast) displays.contrast.value = val.toFixed(3); colorGradingPass.uniforms["contrast"].value = val; });
+        inputs.temperature.addEventListener('input', (e) => { const val = Number(e.target.value); if (document.activeElement !== displays.temperature) displays.temperature.value = val.toFixed(3); colorGradingPass.uniforms["temperature"].value = val; });
 
         Object.keys(inputs).forEach(key => {
-            const rangeInput = inputs[key];
-            const numInput = displays[key];
-
+            const rangeInput = inputs[key], numInput = displays[key];
             if (rangeInput && rangeInput.type === 'range' && numInput) {
-                
-                numInput.addEventListener('input', (e) => {
-                    let val = parseFloat(e.target.value);
-                    if (!isNaN(val)) {
-                        rangeInput.value = val;
-                        rangeInput.dispatchEvent(new Event('input')); 
-                    }
-                });
-
+                numInput.addEventListener('input', (e) => { let val = parseFloat(e.target.value); if (!isNaN(val)) { rangeInput.value = val; rangeInput.dispatchEvent(new Event('input')); } });
                 numInput.addEventListener('change', (e) => {
-                    let val = Number(e.target.value);
-                    const min = Number(rangeInput.min);
-                    const max = Number(rangeInput.max);
-                    if (val < min) val = min;
-                    if (val > max) val = max;
-                    
-                    numInput.value = (rangeInput.step === "1" || rangeInput.step === "100") ? val : val.toFixed(3);
-                    rangeInput.value = val;
-                    rangeInput.dispatchEvent(new Event('input')); 
+                    let val = Number(e.target.value), min = Number(rangeInput.min), max = Number(rangeInput.max);
+                    if (val < min) val = min; if (val > max) val = max;
+                    numInput.value = (rangeInput.step === "1" || rangeInput.step === "100") ? val : val.toFixed(3); rangeInput.value = val; rangeInput.dispatchEvent(new Event('input')); 
                 });
-
-                rangeInput.addEventListener('keydown', (e) => {
-                    if (['ArrowUp', 'ArrowRight', 'ArrowDown', 'ArrowLeft'].includes(e.key)) {
-                        e.preventDefault();
-                        let stepSize = e.shiftKey ? 0.001 : 0.01;
-                        let dir = (e.key === 'ArrowUp' || e.key === 'ArrowRight') ? 1 : -1;
-                        let val = Number(rangeInput.value) + dir * stepSize;
-                        const min = Number(rangeInput.min);
-                        const max = Number(rangeInput.max);
-                        if (val < min) val = min;
-                        if (val > max) val = max;
-                        
-                        rangeInput.value = (rangeInput.step === "1" || rangeInput.step === "100") ? val : val.toFixed(3);
-                        rangeInput.dispatchEvent(new Event('input'));
-                    }
-                });
-
-                const handleWheel = (e) => {
-                    e.preventDefault();
-                    let stepSize = e.shiftKey ? 0.001 : 0.01;
-                    let dir = e.deltaY < 0 ? 1 : -1; 
-                    let val = Number(rangeInput.value) + dir * stepSize;
-                    const min = Number(rangeInput.min);
-                    const max = Number(rangeInput.max);
-                    if (val < min) val = min;
-                    if (val > max) val = max;
-                    
-                    rangeInput.value = (rangeInput.step === "1" || rangeInput.step === "100") ? val : val.toFixed(3);
-                    rangeInput.dispatchEvent(new Event('input'));
+                const stepChange = (dir, e) => {
+                    let stepSize = e.shiftKey ? 0.001 : 0.01, val = Number(rangeInput.value) + dir * stepSize;
+                    const min = Number(rangeInput.min), max = Number(rangeInput.max); if (val < min) val = min; if (val > max) val = max;
+                    rangeInput.value = (rangeInput.step === "1" || rangeInput.step === "100") ? val : val.toFixed(3); rangeInput.dispatchEvent(new Event('input'));
                 };
-
-                rangeInput.addEventListener('wheel', handleWheel);
-                numInput.addEventListener('wheel', handleWheel);
+                rangeInput.addEventListener('keydown', (e) => { if (['ArrowUp', 'ArrowRight', 'ArrowDown', 'ArrowLeft'].includes(e.key)) { e.preventDefault(); stepChange((e.key === 'ArrowUp' || e.key === 'ArrowRight') ? 1 : -1, e); } });
+                const handleWheel = (e) => { e.preventDefault(); stepChange(e.deltaY < 0 ? 1 : -1, e); };
+                rangeInput.addEventListener('wheel', handleWheel); numInput.addEventListener('wheel', handleWheel);
             }
         });
 
+        // 导出代码
         document.getElementById('export-code-btn').addEventListener('click', function() {
-            Object.values(inputs).forEach(input => {
-                if (input.type === 'checkbox') {
-                    if (input.checked) input.setAttribute('checked', 'checked');
-                    else input.removeAttribute('checked');
-                } else {
-                    input.setAttribute('value', input.value);
-                }
-            });
-
-            let docString = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+            Object.values(inputs).forEach(input => { if (input.type === 'checkbox') input.checked ? input.setAttribute('checked', 'checked') : input.removeAttribute('checked'); else input.setAttribute('value', input.value); });
+            let docString = "<!DOCTYPE html>\n" + document.documentElement.outerHTML; 
             docString = docString.replace(/<div id="canvas-container">[\s\S]*?<\/div>/, '<div id="canvas-container"></div>');
-
-            const blob = new Blob([docString], { type: 'text/html' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'gltf_calibrated_setup.js';
-            a.click();
-            URL.revokeObjectURL(url);
+            const dataInject = `let curveData = ${JSON.stringify(curveData)};`;
+            docString = docString.replace(/let curveData = {[\s\S]*?};/, dataInject);
+            const url = URL.createObjectURL(new Blob([docString], { type: 'text/html' })); const a = document.createElement('a'); a.href = url; a.download = 'gltf_calibrated_setup.js'; a.click(); URL.revokeObjectURL(url);
         });
 
+        // 导出 JSON 配置文件
         document.getElementById('export-params-btn').addEventListener('click', function() {
-            const configData = {};
-            for (const key in inputs) {
-                configData[key] = inputs[key].type === 'checkbox' ? inputs[key].checked : inputs[key].value;
-            }
-            
-            configData.cameraPosition = camera.position.toArray();
-            configData.controlsTarget = controls.target.toArray();
-
-            const blob = new Blob([JSON.stringify(configData, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'gltf_calibrator_params.json';
-            a.click();
-            URL.revokeObjectURL(url);
+            const configData = {}; for (const key in inputs) configData[key] = inputs[key].type === 'checkbox' ? inputs[key].checked : inputs[key].value;
+            configData.cameraPosition = camera.position.toArray(); configData.controlsTarget = controls.target.toArray();
+            configData.curveData = curveData;
+            const url = URL.createObjectURL(new Blob([JSON.stringify(configData, null, 2)], { type: 'application/json' })); const a = document.createElement('a'); a.href = url; a.download = 'gltf_calibrator_params.json'; a.click(); URL.revokeObjectURL(url);
         });
 
         const paramImportInput = document.getElementById('param-import-input');
         document.getElementById('import-params-btn').addEventListener('click', () => paramImportInput.click());
-
         paramImportInput.addEventListener('change', function(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
+            const file = event.target.files[0]; if (!file) return; const reader = new FileReader();
             reader.onload = function(e) {
                 try {
                     const data = JSON.parse(e.target.result);
-                    
-                    for (const key in data) {
-                        if (inputs[key]) {
-                            if (inputs[key].type === 'checkbox') {
-                                inputs[key].checked = data[key];
-                            } else {
-                                inputs[key].value = data[key];
-                            }
-                            inputs[key].dispatchEvent(new Event('input'));
-                            inputs[key].dispatchEvent(new Event('change'));
-                        }
-                    }
-
-                    if (data.cameraPosition) camera.position.fromArray(data.cameraPosition);
-                    if (data.controlsTarget) controls.target.fromArray(data.controlsTarget);
-                    controls.update();
-
-                    alert("🎉 配置文件导入并应用成功！\n(已无死角覆盖面板全部设置及相机机位)");
-                } catch (err) {
-                    alert("❌ 导入失败，请确保该文件是标准的参数 JSON 配置文件。");
-                }
+                    for (const key in data) if (inputs[key]) { inputs[key].type === 'checkbox' ? (inputs[key].checked = data[key]) : (inputs[key].value = data[key]); inputs[key].dispatchEvent(new Event('input')); inputs[key].dispatchEvent(new Event('change')); }
+                    if (data.cameraPosition) camera.position.fromArray(data.cameraPosition); if (data.controlsTarget) controls.target.fromArray(data.controlsTarget); controls.update();
+                    if (data.curveData) { curveData = data.curveData; updateLUT(); }
+                    alert("🎉 配置文件导入并应用成功！");
+                } catch (err) { alert("❌ 导入失败，请确保该文件是标准的参数 JSON 配置文件。"); }
             };
-            reader.readAsText(file);
-            event.target.value = ''; 
+            reader.readAsText(file); event.target.value = ''; 
         });
 
-        // 双击模型表面重定位缩放中心（解决卡住问题）
-        const raycaster = new THREE.Raycaster();
-        const mouse = new THREE.Vector2();
-
+        const raycaster = new THREE.Raycaster(); const mouse = new THREE.Vector2();
         window.addEventListener('dblclick', (event) => {
-            if (!currentModel) return;
-            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-            raycaster.setFromCamera(mouse, camera);
-            const intersects = raycaster.intersectObject(currentModel, true);
-            if (intersects.length > 0) {
-                controls.target.copy(intersects[0].point);
-                controls.update();
-            }
+            if (event.target === curveCanvas) return;
+            if (!currentModel) return; mouse.x = (event.clientX / window.innerWidth) * 2 - 1; mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera); const intersects = raycaster.intersectObject(currentModel, true);
+            if (intersects.length > 0) { controls.target.copy(intersects[0].point); controls.update(); }
         });
 
         function animate() {
-            requestAnimationFrame(animate);
-            controls.update();
+            requestAnimationFrame(animate); controls.update();
             if (currentModel) {
-                const userMultiplier = Number(inputs.multiplier.value);
-                const userLightMultiplier = Number(inputs.lightMultiplier.value); 
-
+                const userMultiplier = Number(inputs.multiplier.value), userLightMultiplier = Number(inputs.lightMultiplier.value); 
                 currentModel.traverse((node) => {
                     if (node.isMesh && node.userData.baseEmissiveIntensity !== undefined) {
-                        const mats = Array.isArray(node.material) ? node.material : [node.material];
-                        mats.forEach(mat => { mat.emissiveIntensity = node.userData.baseEmissiveIntensity * userMultiplier; });
+                        const mats = Array.isArray(node.material) ? node.material : [node.material]; mats.forEach(mat => { mat.emissiveIntensity = node.userData.baseEmissiveIntensity * userMultiplier; });
                     }
-                    if (node.isLight && node.userData.baseIntensity !== undefined) {
-                        node.intensity = node.userData.baseIntensity * userLightMultiplier;
-                    }
+                    if (node.isLight && node.userData.baseIntensity !== undefined) node.intensity = node.userData.baseIntensity * userLightMultiplier;
                 });
             }
             composer.render();
         }
         animate();
 
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            composer.setSize(window.innerWidth, window.innerHeight);
-        });
+        window.addEventListener('resize', () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); composer.setSize(window.innerWidth, window.innerHeight); });
     </script>
 </body>
 </html>
